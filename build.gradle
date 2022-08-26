@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Window form code generation plugin
+    implementation 'com.intellij:forms_rt:7.0.3'
+    // JSON parsing
+    implementation 'org.json:json:20220320'
+    // Server and client shared code
+    implementation files("./libs/RacoonShared.jar")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+}
+
+test {
+    useJUnitPlatform()
+}
