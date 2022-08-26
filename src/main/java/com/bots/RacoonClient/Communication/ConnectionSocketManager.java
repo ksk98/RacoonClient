@@ -1,6 +1,10 @@
 package com.bots.RacoonClient.Communication;
 
-import com.bots.RacoonClient.Util.CommunicationUtil;
+import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
+import com.bots.RacoonClient.WindowLogger;
+import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
+import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
+import com.bots.RacoonShared.SocketCommunication.TrafficManager;
 import com.bots.RacoonClient.WindowManager;
 import org.json.*;
 
@@ -38,7 +42,7 @@ public class ConnectionSocketManager {
 
         out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
         in = new DataInputStream(in);
-        trafficManager = new TrafficManager(out, in);
+        trafficManager = new TrafficManager(out, in, WindowLogger.getInstance(), new IncomingLogHandler());
 
         connected = true;
     }
@@ -61,16 +65,10 @@ public class ConnectionSocketManager {
                 .append("username", username)
                 .append("password", password);
 
-        trafficManager.queueOperation(new SocketCommunicationOperation(
-                loginJSON,
-                response -> {
-                    try {
-                        CommunicationUtil.sendTo(out, loginJSON);
-                        response = new JSONObject(CommunicationUtil.readUntilEndFrom(in));
-                    } catch (IOException e) {
-                        displayErrorDialog(e.getMessage());
-                    }
-
+        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder(WindowLogger.getInstance());
+        trafficManager.queueOperation(builder
+                .setRequest(loginJSON)
+                .setOnResponse(response -> {
                     int responseCode = response.getInt("code");
                     if (responseCode == 200 || responseCode == 204) {
                         WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
@@ -81,9 +79,8 @@ public class ConnectionSocketManager {
                             displayErrorDialog("Could not login.", "Login failed");
                         }
                     }
-                },
-                this::displayErrorDialog)
-        );
+                }).setOnError(this::displayErrorDialog)
+                .build());
     }
 
     private void displayErrorDialog(String message) {
