@@ -4,7 +4,6 @@ import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
 import com.bots.RacoonClient.WindowLogger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
-import com.bots.RacoonShared.SocketCommunication.TrafficManager;
 import com.bots.RacoonClient.WindowManager;
 import org.json.*;
 
