@@ -17,7 +17,7 @@ import java.util.Queue;
 /***
  * Class that is used to manage and execute inbound and outbound traffic.
  */
-public class TrafficManager implements Runnable {
+public class TrafficManager extends Thread {
     private boolean running = false;
     private final PrintWriter out;
     private final DataInputStream in;
@@ -48,7 +48,7 @@ public class TrafficManager implements Runnable {
         incomingDataHandler = handlerChain;
     }
 
-    public void stop() {
+    public void stopRunning() {
         running = false;
     }
 
