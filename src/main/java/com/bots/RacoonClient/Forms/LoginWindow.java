@@ -1,6 +1,7 @@
 package com.bots.RacoonClient.Forms;
 
 import com.bots.RacoonClient.Communication.ConnectionSocketManager;
+import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 
@@ -8,6 +9,8 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 
 public class LoginWindow extends JFrame {
@@ -39,11 +42,15 @@ public class LoginWindow extends JFrame {
 
             try {
                 connectionSocketManager.connectTo(URLField.getText(), port);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (UnknownHostException e) {
+                JOptionPane.showMessageDialog(this, "Unknown address: " + e.getMessage(), "Unknown address", JOptionPane.ERROR_MESSAGE);
+            } catch (ConnectException e) {
+                JOptionPane.showMessageDialog(this, "Could not connect to address.", "Connection error", JOptionPane.ERROR_MESSAGE);
+            } catch (IOException | SocketFactoryFailureException e) {
+                JOptionPane.showMessageDialog(this, e, "Error", JOptionPane.ERROR_MESSAGE);
             }
 
-            connectionSocketManager.login(usernameField.getText(), Arrays.toString(passwordField.getPassword()));
+            connectionSocketManager.login(usernameField.getText(), String.valueOf(passwordField.getPassword()));
         });
     }
 

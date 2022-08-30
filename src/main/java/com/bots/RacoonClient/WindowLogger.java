@@ -7,8 +7,8 @@ import com.bots.RacoonShared.Logging.Loggers.LoggerBase;
 public class WindowLogger extends LoggerBase {
     private static WindowLogger instance = null;
 
-    private WindowLogger() {
-
+    protected WindowLogger() {
+        super(1);
     }
 
     public void initialise() {

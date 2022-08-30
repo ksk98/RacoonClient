@@ -9,6 +9,16 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    manifest {
+        attributes "Main-Class": "com.bots.RacoonClient.ApplicationMain"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 dependencies {
     // Window form code generation plugin
     implementation 'com.intellij:forms_rt:7.0.3'

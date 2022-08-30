@@ -1,6 +1,8 @@
 package com.bots.RacoonClient.Communication;
 
+import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
+import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RacoonClient.WindowLogger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
@@ -11,6 +13,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import java.io.*;
+import java.net.SocketTimeoutException;
 
 public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
@@ -23,7 +26,7 @@ public class ConnectionSocketManager {
     private TrafficManager trafficManager;
 
     private ConnectionSocketManager() {
-
+        System.setProperty("javax.net.ssl.trustStore", Config.localKeystorePath);
     }
 
     public static ConnectionSocketManager getInstance() {
@@ -33,15 +36,23 @@ public class ConnectionSocketManager {
         return instance;
     }
 
-    public void connectTo(String host, int port) throws IOException {
-        SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
-
+    public void connectTo(String host, int port) throws IOException, SocketFactoryFailureException {
+        SSLSocketFactory factory = SSLUtil.getSocketFactory();
         socket = (SSLSocket)factory.createSocket(host, port);
-        socket.startHandshake();
+        socket.setSoTimeout(Config.SocketTimeoutMS);
 
-        out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
-        in = new DataInputStream(in);
-        trafficManager = new TrafficManager(out, in, WindowLogger.getInstance(), new IncomingLogHandler());
+        try {
+            socket.startHandshake();
+        } catch (SocketTimeoutException e) {
+            JOptionPane.showMessageDialog(WindowManager.getInstance().getCurrentView(), "Socket timed out.");
+            socket.close();
+            return;
+        }
+
+        out = new PrintWriter(socket.getOutputStream());
+        in = new DataInputStream(socket.getInputStream());
+        trafficManager = new TrafficManager(out, in, WindowLogger.getInstance(), new IncomingLogHandler(null));
+        trafficManager.start();
 
         connected = true;
     }
@@ -64,11 +75,11 @@ public class ConnectionSocketManager {
                 .append("username", username)
                 .append("password", password);
 
-        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder(WindowLogger.getInstance());
+        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
         trafficManager.queueOperation(builder
-                .setRequest(loginJSON)
-                .setOnResponse(response -> {
-                    int responseCode = response.getInt("code");
+                .setData(loginJSON)
+                .setOnResponseReceived(response -> {
+                    int responseCode = response.getInt("response_code");
                     if (responseCode == 200 || responseCode == 204) {
                         WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
                     } else {
@@ -78,7 +89,7 @@ public class ConnectionSocketManager {
                             displayErrorDialog("Could not login.", "Login failed");
                         }
                     }
-                }).setOnError(this::displayErrorDialog)
+                }).setOnErrorEncountered(this::displayErrorDialog)
                 .build());
     }
 

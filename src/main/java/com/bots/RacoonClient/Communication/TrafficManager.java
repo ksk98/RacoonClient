@@ -1,6 +1,6 @@
 package com.bots.RacoonClient.Communication;
 
-import com.bots.RacoonShared.Events.IncomingDataEvents.IncomingDataTrafficHandler;
+import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Logging.Loggers.Logger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperation;
@@ -54,13 +54,14 @@ public class TrafficManager extends Thread {
 
     public void queueOperation(SocketCommunicationOperation operation) {
         operations.put(nextId, operation);
+        idToSendQueue.add(nextId);
         nextId += 1;
     }
 
     private void finaliseOperationForResponse(JSONObject response) {
-        int id = response.getInt("operation_id");
+        int id = response.getInt("client_operation_id");
         SocketCommunicationOperation operation = operations.remove(id);
-        operation.getOnResponse().accept(response);
+        operation.getOnResponseReceived().accept(response);
 
         if (operations.isEmpty())
             nextId = 0;
@@ -81,17 +82,17 @@ public class TrafficManager extends Thread {
             try {
                 if (!idToSendQueue.isEmpty()) {
                     Integer idToSend = idToSendQueue.poll();
-                    JSONObject request = operations.get(idToSend).getRequest().append("operation_id", idToSend);
+                    JSONObject request = operations.get(idToSend).getRequest().append("client_operation_id", idToSend);
                     CommunicationUtil.sendTo(out, request);
 
                     if (out.checkError()) {
-                        operations.get(idToSend).getOnError().accept("PrintWriter failed to send request: " + request);
+                        operations.get(idToSend).getOnErrorEncountered().accept("PrintWriter failed to send request: " + request);
                         removeOperation(idToSend);
                     }
                 }
 
                 JSONObject incomingData = new JSONObject(CommunicationUtil.readUntilEndFrom(in));
-                if (incomingData.has("operation_id")) {
+                if (incomingData.has("client_operation_id")) {
                     finaliseOperationForResponse(incomingData);
                 } else if (incomingData.has("operation")) {
                     incomingDataHandler.handle(incomingData);
