@@ -1,21 +1,22 @@
 package com.bots.RacoonClient;
 
 import com.bots.RacoonShared.Logging.Log;
+import com.bots.RacoonShared.Logging.Loggers.Logger;
 import com.bots.RacoonShared.Logging.Loggers.LoggerBase;
 
 // TODO:
 public class WindowLogger extends LoggerBase {
     private static WindowLogger instance = null;
 
-    protected WindowLogger() {
-        super(1);
+    private WindowLogger() {
+
     }
 
     public void initialise() {
 
     }
 
-    public static WindowLogger getInstance() {
+    public static Logger getInstance() {
         if (instance == null)
             instance = new WindowLogger();
 
@@ -24,6 +25,6 @@ public class WindowLogger extends LoggerBase {
 
     @Override
     public void log(Log log) {
-
+        System.out.println(log);
     }
 }

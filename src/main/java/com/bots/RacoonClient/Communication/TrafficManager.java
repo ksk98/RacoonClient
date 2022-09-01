@@ -1,14 +1,19 @@
 package com.bots.RacoonClient.Communication;
 
+import com.bots.RacoonClient.WindowLogger;
+import com.bots.RacoonClient.WindowManager;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Logging.Loggers.Logger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperation;
 import org.json.JSONObject;
 
+import javax.net.ssl.SSLSocket;
+import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -19,8 +24,7 @@ import java.util.Queue;
  */
 public class TrafficManager extends Thread {
     private boolean running = false;
-    private final PrintWriter out;
-    private final DataInputStream in;
+    private final SocketConnection socketConnection;
     private final Logger logger;
 
     private final Map<Integer, SocketCommunicationOperation> operations;
@@ -30,15 +34,13 @@ public class TrafficManager extends Thread {
     private final IncomingDataTrafficHandler incomingDataHandler;
 
     /***
-     * @param out used in sending outbound traffic
-     * @param in used in receiving incoming traffic
+     * @param socket socket which traffic will be going through
      * @param logger used to log necessary information
      * @param handlerChain chain of responsibility that utilises IncomingDataTrafficHandler interface, used in
      *                     handling incoming traffic that is not part of any queued operations
      */
-    public TrafficManager(PrintWriter out, DataInputStream in, Logger logger, IncomingDataTrafficHandler handlerChain) {
-        this.out = out;
-        this.in = in;
+    public TrafficManager(SSLSocket socket, Logger logger, IncomingDataTrafficHandler handlerChain) throws IOException {
+        this.socketConnection = new SocketConnection(socket);
         this.logger = logger;
 
         this.operations = new HashMap<>();
@@ -74,34 +76,72 @@ public class TrafficManager extends Thread {
             nextId = 0;
     }
 
+    public SocketConnection getSocketConnection() {
+        return socketConnection;
+    }
+
     @Override
     public void run() {
         running = true;
 
         while (running) {
-            try {
-                if (!idToSendQueue.isEmpty()) {
-                    Integer idToSend = idToSendQueue.poll();
-                    JSONObject request = operations.get(idToSend).getRequest().append("client_operation_id", idToSend);
-                    CommunicationUtil.sendTo(out, request);
+            if (socketConnection.isClosed()) {
+                try {
+                    socketConnection.socket.close();
+                    JOptionPane.showMessageDialog(
+                            WindowManager.getInstance().getCurrentView(),
+                            "Connection with host has been lost.",
+                            "Connection was lost",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(
+                            WindowManager.getInstance().getCurrentView(),
+                            "Connection with host has been lost and the socket could not be closed.",
+                            "Connection was lost",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                running = false;
+                break;
+            }
 
-                    if (out.checkError()) {
+            if (!idToSendQueue.isEmpty()) {
+                Integer idToSend = idToSendQueue.poll();
+                JSONObject request = operations.get(idToSend).getRequest().put("client_operation_id", idToSend);
+                try {
+                    CommunicationUtil.sendTo(socketConnection.out, request);
+                    if (socketConnection.out.checkError()) {
                         operations.get(idToSend).getOnErrorEncountered().accept("PrintWriter failed to send request: " + request);
                         removeOperation(idToSend);
                     }
+                } catch (IOException e) {
+                    WindowLogger.getInstance().logError(
+                            getClass().getName(),
+                            "Failed to send request: " + request + " (" + e + ")"
+                    );
                 }
+            }
 
-                JSONObject incomingData = new JSONObject(CommunicationUtil.readUntilEndFrom(in));
-                if (incomingData.has("client_operation_id")) {
-                    finaliseOperationForResponse(incomingData);
-                } else if (incomingData.has("operation")) {
-                    incomingDataHandler.handle(incomingData);
-                } else {
-                    logger.logInfo("Data was received from socket stream but could not be handled.");
-                }
-
+            JSONObject incomingData;
+            try {
+                incomingData = new JSONObject(CommunicationUtil.readUntilEndFrom(socketConnection.in));
+            } catch (SocketTimeoutException ignored) {
+                continue;
             } catch (IOException e) {
-                logger.logError(e.getMessage());
+                WindowLogger.getInstance().logError(
+                        getClass().getName(),
+                        "Could not read data from socket stream. (" + e + ")"
+                );
+                continue;
+            }
+            if (incomingData.has("client_operation_id")) {
+                finaliseOperationForResponse(incomingData);
+            } else if (incomingData.has("operation")) {
+                incomingDataHandler.handle(incomingData);
+            } else {
+                logger.logInfo(
+                        getClass().getName(),
+                        "Data was received from socket stream but could not be handled."
+                );
             }
         }
     }

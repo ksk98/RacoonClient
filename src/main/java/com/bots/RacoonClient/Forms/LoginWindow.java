@@ -8,6 +8,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -41,7 +43,8 @@ public class LoginWindow extends JFrame {
             }
 
             try {
-                connectionSocketManager.connectTo(URLField.getText(), port);
+                if (connectionSocketManager.isDisconnected())
+                    connectionSocketManager.connectTo(URLField.getText(), port);
             } catch (UnknownHostException e) {
                 JOptionPane.showMessageDialog(this, "Unknown address: " + e.getMessage(), "Unknown address", JOptionPane.ERROR_MESSAGE);
             } catch (ConnectException e) {

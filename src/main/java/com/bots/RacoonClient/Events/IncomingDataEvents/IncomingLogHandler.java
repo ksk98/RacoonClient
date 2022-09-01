@@ -21,7 +21,10 @@ public class IncomingLogHandler extends BaseIncomingDataTrafficHandler {
             try {
                 WindowLogger.getInstance().log((Log) SerializationUtil.fromString(response.getString("object")));
             } catch (IOException | ClassNotFoundException e) {
-                WindowLogger.getInstance().logError(e.getMessage());
+                WindowLogger.getInstance().logError(
+                        getClass().getName(),
+                        e.getMessage()
+                );
             }
         } else super.handle(response);
     }

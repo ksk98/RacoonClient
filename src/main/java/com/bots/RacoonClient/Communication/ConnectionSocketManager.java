@@ -19,7 +19,7 @@ public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
 
     private SSLSocket socket = null;
-    private boolean connected = false, loggedIn = false;
+    private boolean loggedIn = false;
 
     private PrintWriter out;
     private DataInputStream in;
@@ -51,29 +51,28 @@ public class ConnectionSocketManager {
 
         out = new PrintWriter(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
-        trafficManager = new TrafficManager(out, in, WindowLogger.getInstance(), new IncomingLogHandler(null));
+        trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), new IncomingLogHandler(null));
         trafficManager.start();
-
-        connected = true;
     }
 
     public void disconnect() throws IOException {
-        CommunicationUtil.sendTo(out, new JSONObject().append("operation", "disconnect"));
+        if (!isDisconnected())
+            CommunicationUtil.sendTo(out, new JSONObject().put("operation", "disconnect"));
         in.close();
         out.close();
         socket.close();
-        connected = false;
+        trafficManager.stopRunning();
         loggedIn = false;
     }
 
     public void login(String username, String password) {
-        if (!connected)
+        if (isDisconnected())
             return;
 
         JSONObject loginJSON = new JSONObject()
-                .append("operation", "login")
-                .append("username", username)
-                .append("password", password);
+                .put("operation", "login")
+                .put("username", username)
+                .put("password", password);
 
         SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
         trafficManager.queueOperation(builder
@@ -103,8 +102,8 @@ public class ConnectionSocketManager {
         );
     }
 
-    public boolean isConnected() {
-        return connected;
+    public boolean isDisconnected() {
+        return trafficManager == null || trafficManager.getSocketConnection().isClosed();
     }
 
     public boolean isLoggedIn() {
