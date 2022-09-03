@@ -19,30 +19,13 @@ public class WindowManager {
     }
 
     private static WindowManager instance = null;
-    private Map<View, JFrame> views = new HashMap<>();
+    private Map<View, JFrame> views;
     private View currentView;
 
     private WindowManager() {
-        views.put(View.LOGIN, new LoginWindow(Config.windowTitle));
-
-        MainWindow mainWindow = new MainWindow(Config.windowTitle);
-        WindowLogger.getInstance().setTarget(new LogOutput(mainWindow.getLogsContentPane()));
-        views.put(View.MAIN, mainWindow);
-
+        createViews();
         currentView = View.LOGIN;
         getCurrentView().setVisible(true);
-
-        views.get(View.MAIN).addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                super.windowClosed(e);
-                try {
-                    ConnectionSocketManager.getInstance().disconnect();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
     }
 
     public static WindowManager getInstance() {
@@ -60,5 +43,43 @@ public class WindowManager {
 
     public JFrame getCurrentView() {
         return views.get(currentView);
+    }
+
+    public static void displayError(String message) {
+        displayError(message, Config.windowTitle);
+    }
+
+    public static void displayError(String message, String title) {
+        JOptionPane.showMessageDialog(getInstance().getCurrentView(), message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
+    public static void displayMessage(String message) {
+        displayMessage(message, Config.windowTitle);
+    }
+
+    public static void displayMessage(String message, String title) {
+        JOptionPane.showMessageDialog(getInstance().getCurrentView(), message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void createViews() {
+        views = new HashMap<>();
+
+        views.put(View.LOGIN, new LoginWindow(Config.windowTitle));
+
+        MainWindow mainWindow = new MainWindow(Config.windowTitle);
+        WindowLogger.getInstance().setTarget(new LogOutput(mainWindow.getLogsContentPane()));
+        views.put(View.MAIN, mainWindow);
+
+        views.get(View.MAIN).addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+                try {
+                    ConnectionSocketManager.getInstance().disconnect();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 }

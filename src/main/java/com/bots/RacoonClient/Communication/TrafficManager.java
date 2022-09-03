@@ -86,17 +86,13 @@ public class TrafficManager extends Thread {
             if (socketConnection.isClosed()) {
                 try {
                     socketConnection.socket.close();
-                    JOptionPane.showMessageDialog(
-                            WindowManager.getInstance().getCurrentView(),
-                            "Connection with host has been lost.",
-                            "Connection was lost",
-                            JOptionPane.ERROR_MESSAGE);
+                    WindowManager.displayError(
+                            "Connection with host has been lost.", "Connection was lost");
                 } catch (IOException e) {
-                    JOptionPane.showMessageDialog(
-                            WindowManager.getInstance().getCurrentView(),
+                    WindowManager.displayError(
                             "Connection with host has been lost and the socket could not be closed.",
-                            "Connection was lost",
-                            JOptionPane.ERROR_MESSAGE);
+                            "Connection was lost"
+                    );
                 }
                 running = false;
                 break;

@@ -14,7 +14,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import java.io.*;
 import java.net.SocketTimeoutException;
-import java.util.Objects;
 
 public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
@@ -45,7 +44,7 @@ public class ConnectionSocketManager {
         try {
             socket.startHandshake();
         } catch (SocketTimeoutException e) {
-            JOptionPane.showMessageDialog(WindowManager.getInstance().getCurrentView(), "Socket timed out.");
+            WindowManager.displayError("Connection timed out.", "Connection timeout");
             disconnect();
             return;
         }
@@ -87,34 +86,20 @@ public class ConnectionSocketManager {
                         WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
                     } else {
                         try {
-                            displayErrorDialog(response.getString("message"), "Login failed");
+                            WindowManager.displayError(response.getString("message"), "Login failed");
                         } catch (JSONException e) {
-                            displayErrorDialog("Could not login.", "Login failed");
+                            WindowManager.displayError("Could not login.", "Login failed");
                         }
 
                         try {
                             disconnect();
                         } catch (IOException e) {
-                            JOptionPane.showMessageDialog(
-                                    WindowManager.getInstance().getCurrentView(),
-                                    "Could not disconnect properly.",
-                                    "Disconnect failed.",
-                                    JOptionPane.ERROR_MESSAGE
-                            );
+                            WindowManager.displayError(
+                                    "Could not disconnect properly.", "Disconnect failed.");
                         }
                     }
-                }).setOnErrorEncountered(this::displayErrorDialog)
+                }).setOnErrorEncountered(WindowManager::displayError)
                 .build());
-    }
-
-    private void displayErrorDialog(String message) {
-        displayErrorDialog(message, "Error");
-    }
-
-    private void displayErrorDialog(String message, String title) {
-        JOptionPane.showMessageDialog(WindowManager.getInstance().getCurrentView(),
-                message, title, JOptionPane.ERROR_MESSAGE
-        );
     }
 
     public boolean isDisconnected() {
