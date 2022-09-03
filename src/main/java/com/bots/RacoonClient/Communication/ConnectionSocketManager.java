@@ -3,7 +3,7 @@ package com.bots.RacoonClient.Communication;
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
-import com.bots.RacoonClient.WindowLogger;
+import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
 import com.bots.RacoonClient.WindowManager;
@@ -14,6 +14,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import java.io.*;
 import java.net.SocketTimeoutException;
+import java.util.Objects;
 
 public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
@@ -21,9 +22,9 @@ public class ConnectionSocketManager {
     private SSLSocket socket = null;
     private boolean loggedIn = false;
 
-    private PrintWriter out;
-    private DataInputStream in;
-    private TrafficManager trafficManager;
+    private PrintWriter out = null;
+    private DataInputStream in = null;
+    private TrafficManager trafficManager = null;
 
     private ConnectionSocketManager() {
         System.setProperty("javax.net.ssl.trustStore", Config.localKeystorePath);
@@ -45,7 +46,7 @@ public class ConnectionSocketManager {
             socket.startHandshake();
         } catch (SocketTimeoutException e) {
             JOptionPane.showMessageDialog(WindowManager.getInstance().getCurrentView(), "Socket timed out.");
-            socket.close();
+            disconnect();
             return;
         }
 
@@ -58,11 +59,14 @@ public class ConnectionSocketManager {
     public void disconnect() throws IOException {
         if (!isDisconnected())
             CommunicationUtil.sendTo(out, new JSONObject().put("operation", "disconnect"));
-        in.close();
-        out.close();
-        socket.close();
-        trafficManager.stopRunning();
+
+        if (in != null) in.close();
+        if (out != null) out.close();
+        if (socket != null) socket.close();
+        if (trafficManager != null) trafficManager.stopRunning();
+
         loggedIn = false;
+        socket = null;
     }
 
     public void login(String username, String password) {
@@ -86,6 +90,17 @@ public class ConnectionSocketManager {
                             displayErrorDialog(response.getString("message"), "Login failed");
                         } catch (JSONException e) {
                             displayErrorDialog("Could not login.", "Login failed");
+                        }
+
+                        try {
+                            disconnect();
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(
+                                    WindowManager.getInstance().getCurrentView(),
+                                    "Could not disconnect properly.",
+                                    "Disconnect failed.",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
                         }
                     }
                 }).setOnErrorEncountered(this::displayErrorDialog)

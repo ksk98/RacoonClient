@@ -1,6 +1,6 @@
 package com.bots.RacoonClient.Communication;
 
-import com.bots.RacoonClient.WindowLogger;
+import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonClient.WindowManager;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Logging.Loggers.Logger;
@@ -10,9 +10,7 @@ import org.json.JSONObject;
 
 import javax.net.ssl.SSLSocket;
 import javax.swing.*;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.LinkedList;

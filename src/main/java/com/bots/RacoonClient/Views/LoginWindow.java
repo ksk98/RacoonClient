@@ -1,4 +1,4 @@
-package com.bots.RacoonClient.Forms;
+package com.bots.RacoonClient.Views;
 
 import com.bots.RacoonClient.Communication.ConnectionSocketManager;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
@@ -8,12 +8,9 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 public class LoginWindow extends JFrame {
     private JTextField URLField;

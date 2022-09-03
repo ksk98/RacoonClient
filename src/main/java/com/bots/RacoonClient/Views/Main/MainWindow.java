@@ -1,4 +1,4 @@
-package com.bots.RacoonClient.Forms;
+package com.bots.RacoonClient.Views.Main;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;

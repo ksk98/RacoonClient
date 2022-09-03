@@ -1,7 +1,7 @@
 package com.bots.RacoonClient.Events.IncomingDataEvents;
 
 
-import com.bots.RacoonClient.WindowLogger;
+import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonShared.IncomingDataHandlers.BaseIncomingDataTrafficHandler;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Logging.Log;
@@ -19,7 +19,7 @@ public class IncomingLogHandler extends BaseIncomingDataTrafficHandler {
     public void handle(JSONObject response) {
         if (response.getString("operation").equals("log")) {
             try {
-                WindowLogger.getInstance().log((Log) SerializationUtil.fromString(response.getString("object")));
+                WindowLogger.getInstance().logRemote((Log) SerializationUtil.fromString(response.getString("body")));
             } catch (IOException | ClassNotFoundException e) {
                 WindowLogger.getInstance().logError(
                         getClass().getName(),

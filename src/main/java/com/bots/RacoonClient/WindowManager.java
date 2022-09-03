@@ -1,8 +1,10 @@
 package com.bots.RacoonClient;
 
 import com.bots.RacoonClient.Communication.ConnectionSocketManager;
-import com.bots.RacoonClient.Forms.LoginWindow;
-import com.bots.RacoonClient.Forms.MainWindow;
+import com.bots.RacoonClient.Loggers.WindowLogger;
+import com.bots.RacoonClient.Views.LoginWindow;
+import com.bots.RacoonClient.Views.Main.LogOutput;
+import com.bots.RacoonClient.Views.Main.MainWindow;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
@@ -22,7 +24,11 @@ public class WindowManager {
 
     private WindowManager() {
         views.put(View.LOGIN, new LoginWindow(Config.windowTitle));
-        views.put(View.MAIN, new MainWindow(Config.windowTitle));
+
+        MainWindow mainWindow = new MainWindow(Config.windowTitle);
+        WindowLogger.getInstance().setTarget(new LogOutput(mainWindow.getLogsContentPane()));
+        views.put(View.MAIN, mainWindow);
+
         currentView = View.LOGIN;
         getCurrentView().setVisible(true);
 

@@ -2,7 +2,6 @@ package com.bots.RacoonClient.Communication;
 
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
-import com.bots.RacoonClient.WindowLogger;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
