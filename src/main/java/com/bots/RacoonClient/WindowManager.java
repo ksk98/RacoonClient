@@ -45,6 +45,10 @@ public class WindowManager {
         return views.get(currentView);
     }
 
+    public JFrame getView(View view) {
+        return views.get(view);
+    }
+
     public static void displayError(String message) {
         displayError(message, Config.windowTitle);
     }

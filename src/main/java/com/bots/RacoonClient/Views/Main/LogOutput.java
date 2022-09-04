@@ -13,8 +13,8 @@ public class LogOutput {
     private final JTextPane textPane;
     private final MutableAttributeSet localCallerAttribute, remoteCallerAttribute, messageAttribute;
 
-    public LogOutput(JTextPane pane) {
-        this.textPane = pane;
+    public LogOutput(JTextPane output) {
+        this.textPane = output;
         this.localCallerAttribute = new SimpleAttributeSet();
         StyleConstants.setForeground(this.localCallerAttribute, new Color(14, 133, 178));
         this.remoteCallerAttribute = new SimpleAttributeSet();

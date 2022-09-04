@@ -1,25 +1,28 @@
 package com.bots.RacoonClient.Events.IncomingDataEvents;
 
-
 import com.bots.RacoonClient.Loggers.WindowLogger;
+import com.bots.RacoonClient.Views.Main.MessageOutput;
+import com.bots.RacoonShared.Discord.MessageLog;
 import com.bots.RacoonShared.IncomingDataHandlers.BaseIncomingDataTrafficHandler;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
-import com.bots.RacoonShared.Logging.Log;
 import com.bots.RacoonShared.Util.SerializationUtil;
 import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class IncomingLogHandler extends BaseIncomingDataTrafficHandler {
-    public IncomingLogHandler(IncomingDataTrafficHandler next) {
+public class IncomingMessageHandler extends BaseIncomingDataTrafficHandler {
+    private final MessageOutput output;
+
+    public IncomingMessageHandler(IncomingDataTrafficHandler next, MessageOutput output) {
         super(next);
+        this.output = output;
     }
 
     @Override
     public void handle(JSONObject data) {
-        if (data.getString("operation").equals("log")) {
+        if (data.get("operation").equals("message")) {
             try {
-                WindowLogger.getInstance().logRemote((Log) SerializationUtil.fromString(data.getString("body")));
+                output.LogMessage((MessageLog) SerializationUtil.fromString(data.getString("body")));
             } catch (IOException | ClassNotFoundException e) {
                 WindowLogger.getInstance().logError(
                         getClass().getName(),

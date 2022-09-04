@@ -2,8 +2,12 @@ package com.bots.RacoonClient.Communication;
 
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
+import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingMessageHandler;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RacoonClient.Loggers.WindowLogger;
+import com.bots.RacoonClient.Views.Main.MainWindow;
+import com.bots.RacoonClient.Views.Main.MessageOutput;
+import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
 import com.bots.RacoonClient.WindowManager;
@@ -11,7 +15,6 @@ import org.json.*;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.swing.*;
 import java.io.*;
 import java.net.SocketTimeoutException;
 
@@ -51,7 +54,7 @@ public class ConnectionSocketManager {
 
         out = new PrintWriter(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
-        trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), new IncomingLogHandler(null));
+        trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), createHandlerChain());
         trafficManager.start();
     }
 
@@ -108,5 +111,14 @@ public class ConnectionSocketManager {
 
     public boolean isLoggedIn() {
         return loggedIn;
+    }
+
+    private IncomingDataTrafficHandler createHandlerChain() {
+        return new IncomingMessageHandler(
+                new IncomingLogHandler(null),
+                new MessageOutput(
+                        ((MainWindow) WindowManager.getInstance().getView(WindowManager.View.MAIN))
+                                .getLogsContentPane())
+        );
     }
 }
