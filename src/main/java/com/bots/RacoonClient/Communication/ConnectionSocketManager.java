@@ -118,7 +118,7 @@ public class ConnectionSocketManager {
                 new IncomingLogHandler(null),
                 new MessageOutput(
                         ((MainWindow) WindowManager.getInstance().getView(WindowManager.View.MAIN))
-                                .getLogsContentPane())
+                                .getMessagesContentPane())
         );
     }
 }
