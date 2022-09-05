@@ -11,8 +11,8 @@ public class MainWindow extends JFrame {
     private JTabbedPane contentPanelTabs;
     private JTextPane messagesContentPane;
     private JTextArea sendMessageContentPane;
-    private JComboBox messagesTabServerPickBox;
-    private JComboBox messagesTabChannelPickBox;
+    private JComboBox<ServerChannels> messagesTabServerPickBox;
+    private JComboBox<Channel> messagesTabChannelPickBox;
     private JButton sendMessageButton;
     private JTextPane logsContentPane;
     private JPanel messagesTab;
@@ -27,6 +27,14 @@ public class MainWindow extends JFrame {
         setMinimumSize(new Dimension(850, 550));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
+    }
+
+    public JComboBox<ServerChannels> getMessagesTabServerPickBox() {
+        return messagesTabServerPickBox;
+    }
+
+    public JComboBox<Channel> getMessagesTabChannelPickBox() {
+        return messagesTabChannelPickBox;
     }
 
     public JTextPane getLogsContentPane() {

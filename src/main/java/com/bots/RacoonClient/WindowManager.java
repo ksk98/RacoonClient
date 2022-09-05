@@ -5,6 +5,7 @@ import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonClient.Views.LoginWindow;
 import com.bots.RacoonClient.Views.Main.LogOutput;
 import com.bots.RacoonClient.Views.Main.MainWindow;
+import com.bots.RacoonClient.Views.Main.MainWindowController;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
@@ -20,12 +21,14 @@ public class WindowManager {
 
     private static WindowManager instance = null;
     private Map<View, JFrame> views;
+    private final MainWindowController mainWindowController;
     private View currentView;
 
     private WindowManager() {
         createViews();
         currentView = View.LOGIN;
         getCurrentView().setVisible(true);
+        mainWindowController = new MainWindowController((MainWindow) getView(View.MAIN));
     }
 
     public static WindowManager getInstance() {
@@ -85,5 +88,9 @@ public class WindowManager {
                 }
             }
         });
+    }
+
+    public MainWindowController getMainWindowController() {
+        return mainWindowController;
     }
 }

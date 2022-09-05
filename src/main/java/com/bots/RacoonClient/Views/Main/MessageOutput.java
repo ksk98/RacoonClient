@@ -13,7 +13,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class MessageOutput {
-    private final JTextPane textPane;
+    private final MainWindowController mainWindowController;
+    private StyledDocument currentDocument = null;
     private final Map<Entry<String, String>, MutableAttributeSet> userAttributes;
     private final MutableAttributeSet messageAttribute, botAttribute;
 
@@ -29,6 +30,8 @@ public class MessageOutput {
     }
 
     public void LogMessage(MessageLog message) {
+        selectDocument(message.serverId, message.channelId);
+
         Entry<String, String> userAttributeKey = Map.entry(message.serverId, message.username);
         MutableAttributeSet userAttribute = userAttributes.get(userAttributeKey);
         if (userAttribute == null) {
@@ -62,8 +65,14 @@ public class MessageOutput {
         }
     }
 
+    private void selectDocument(String serverId, String channelId) {
+
+    }
+
     private void append(String message, AttributeSet attributes) throws BadLocationException {
-        textPane.getStyledDocument().insertString(
+        if (currentDocument == null) return;
+
+        currentDocument.insertString(
                 textPane.getStyledDocument().getLength(),
                 message,
                 attributes
