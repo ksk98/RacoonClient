@@ -8,6 +8,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -29,29 +31,54 @@ public class LoginWindow extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
 
-        loginButton.addActionListener(event -> {
-            ConnectionSocketManager connectionSocketManager = ConnectionSocketManager.getInstance();
-            int port;
-            try {
-                port = Integer.parseInt(portField.getText());
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Invalid port.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+        KeyListener loginOnEnter = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
             }
 
-            try {
-                if (connectionSocketManager.isDisconnected())
-                    connectionSocketManager.connectTo(URLField.getText(), port);
-            } catch (UnknownHostException e) {
-                JOptionPane.showMessageDialog(this, "Unknown address: " + e.getMessage(), "Unknown address", JOptionPane.ERROR_MESSAGE);
-            } catch (ConnectException e) {
-                JOptionPane.showMessageDialog(this, "Could not connect to address.", "Connection error", JOptionPane.ERROR_MESSAGE);
-            } catch (IOException | SocketFactoryFailureException e) {
-                JOptionPane.showMessageDialog(this, e, "Error", JOptionPane.ERROR_MESSAGE);
+            @Override
+            public void keyPressed(KeyEvent e) {
+
             }
 
-            connectionSocketManager.login(usernameField.getText(), String.valueOf(passwordField.getPassword()));
-        });
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                    login();
+            }
+        };
+
+        URLField.addKeyListener(loginOnEnter);
+        portField.addKeyListener(loginOnEnter);
+        usernameField.addKeyListener(loginOnEnter);
+        passwordField.addKeyListener(loginOnEnter);
+
+        loginButton.addActionListener(event -> login());
+    }
+
+    private void login() {
+        ConnectionSocketManager connectionSocketManager = ConnectionSocketManager.getInstance();
+        int port;
+        try {
+            port = Integer.parseInt(portField.getText());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid port.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            if (connectionSocketManager.isDisconnected())
+                connectionSocketManager.connectTo(URLField.getText(), port);
+        } catch (UnknownHostException e) {
+            JOptionPane.showMessageDialog(this, "Unknown address: " + e.getMessage(), "Unknown address", JOptionPane.ERROR_MESSAGE);
+        } catch (ConnectException e) {
+            JOptionPane.showMessageDialog(this, "Could not connect to address.", "Connection error", JOptionPane.ERROR_MESSAGE);
+        } catch (IOException | SocketFactoryFailureException e) {
+            JOptionPane.showMessageDialog(this, e, "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        connectionSocketManager.login(usernameField.getText(), String.valueOf(passwordField.getPassword()));
     }
 
     {

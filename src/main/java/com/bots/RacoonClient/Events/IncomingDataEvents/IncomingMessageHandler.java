@@ -4,7 +4,6 @@ import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonClient.Views.Main.MessageOutput;
 import com.bots.RacoonShared.Discord.MessageLog;
 import com.bots.RacoonShared.IncomingDataHandlers.BaseIncomingDataTrafficHandler;
-import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Util.SerializationUtil;
 import org.json.JSONObject;
 
@@ -13,8 +12,7 @@ import java.io.IOException;
 public class IncomingMessageHandler extends BaseIncomingDataTrafficHandler {
     private final MessageOutput output;
 
-    public IncomingMessageHandler(IncomingDataTrafficHandler next, MessageOutput output) {
-        super(next);
+    public IncomingMessageHandler(MessageOutput output) {
         this.output = output;
     }
 

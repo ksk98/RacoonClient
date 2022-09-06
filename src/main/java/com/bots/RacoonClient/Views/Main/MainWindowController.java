@@ -1,5 +1,7 @@
 package com.bots.RacoonClient.Views.Main;
 
+import com.bots.RacoonShared.Discord.Channel;
+import com.bots.RacoonShared.Discord.ServerChannels;
 import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.StyledDocument;
@@ -8,8 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
-public class MainWindowController {
+public class MainWindowController implements ServerChannelListConsumer {
     private final MainWindow mainWindow;
     private final JComboBox<ServerChannels> serverPicker;
     private final JComboBox<Channel> channelPicker;
@@ -34,7 +37,8 @@ public class MainWindowController {
         });
     }
 
-    public void setServerChannels(List<ServerChannels> content) {
+    @Override
+    public void consumeServerChannelList(List<ServerChannels> content) {
         serverPicker.removeAll();
         content.forEach(sc -> {
             serverChannelsMap.put(sc.serverId, sc);
@@ -45,11 +49,19 @@ public class MainWindowController {
         refreshForNewServerSelection();
     }
 
+    public StyledDocument getDocumentFor(String serverId, String channelId) {
+        Entry<String, String> key = Map.entry(serverId, channelId);
+        if (!serverChannelDocument.containsKey(key))
+            serverChannelDocument.put(key, new DefaultStyledDocument());
+
+        return serverChannelDocument.get(key);
+    }
+
     private void refreshForNewServerSelection() {
         if (serverPicker.getSelectedItem() == null)
             return;
 
-        String serverId = (String) serverPicker.getSelectedItem();
+        String serverId = ((ServerChannels) serverPicker.getSelectedItem()).serverId;
         if (!serverChannelsMap.containsKey(serverId))
             return;
 
@@ -76,19 +88,19 @@ public class MainWindowController {
         return getDocumentFor(getSelectedServerId(), getSelectedChannelId());
     }
 
-    private StyledDocument getDocumentFor(String serverId, String channelId) {
-        Entry<String, String> key = Map.entry(serverId, channelId);
-        if (!serverChannelDocument.containsKey(key))
-            serverChannelDocument.put(key, new DefaultStyledDocument());
-
-        return serverChannelDocument.get(key);
-    }
-
     private String getSelectedServerId() {
-        return (String) serverPicker.getSelectedItem();
+        try {
+            return ((ServerChannels) Objects.requireNonNull(serverPicker.getSelectedItem())).serverId;
+        } catch (NullPointerException ignored) {
+            return null;
+        }
     }
 
     private String getSelectedChannelId() {
-        return (String) channelPicker.getSelectedItem();
+        try {
+            return ((Channel) Objects.requireNonNull(channelPicker.getSelectedItem())).channelId();
+        } catch (NullPointerException ignored) {
+            return null;
+        }
     }
 }

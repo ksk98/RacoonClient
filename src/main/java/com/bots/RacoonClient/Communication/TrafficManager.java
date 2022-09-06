@@ -100,9 +100,13 @@ public class TrafficManager extends Thread {
 
             if (!idToSendQueue.isEmpty()) {
                 Integer idToSend = idToSendQueue.poll();
-                JSONObject request = operations.get(idToSend).getRequest().put("client_operation_id", idToSend);
+                JSONObject request = operations.get(idToSend).getRequest();
+                if (operations.get(idToSend).waitForResponse())
+                    request.put("client_operation_id", idToSend);
+
                 try {
                     CommunicationUtil.sendTo(socketConnection.out, request);
+                    System.out.println("SENDING: " + request);
                     if (socketConnection.out.checkError()) {
                         operations.get(idToSend).getOnErrorEncountered().accept("PrintWriter failed to send request: " + request);
                         removeOperation(idToSend);
@@ -118,6 +122,7 @@ public class TrafficManager extends Thread {
             JSONObject incomingData;
             try {
                 incomingData = new JSONObject(CommunicationUtil.readUntilEndFrom(socketConnection.in));
+                System.out.println("RECEIVED: " + incomingData);
             } catch (SocketTimeoutException ignored) {
                 continue;
             } catch (IOException e) {

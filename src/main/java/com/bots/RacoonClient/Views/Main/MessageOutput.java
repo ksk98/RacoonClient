@@ -4,7 +4,6 @@ import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonShared.Discord.MessageLog;
 
-import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.time.ZonedDateTime;
@@ -18,8 +17,8 @@ public class MessageOutput {
     private final Map<Entry<String, String>, MutableAttributeSet> userAttributes;
     private final MutableAttributeSet messageAttribute, botAttribute;
 
-    public MessageOutput(JTextPane output) {
-        this.textPane = output;
+    public MessageOutput(MainWindowController mainWindowController) {
+        this.mainWindowController = mainWindowController;
         userAttributes = new HashMap<>();
         messageAttribute = new SimpleAttributeSet();
 //        StyleConstants.setLeftIndent(messageAttribute, 32);
@@ -66,14 +65,14 @@ public class MessageOutput {
     }
 
     private void selectDocument(String serverId, String channelId) {
-
+        currentDocument = mainWindowController.getDocumentFor(serverId, channelId);
     }
 
     private void append(String message, AttributeSet attributes) throws BadLocationException {
         if (currentDocument == null) return;
 
         currentDocument.insertString(
-                textPane.getStyledDocument().getLength(),
+                currentDocument.getLength(),
                 message,
                 attributes
         );

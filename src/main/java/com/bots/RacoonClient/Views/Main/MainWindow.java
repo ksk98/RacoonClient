@@ -2,6 +2,8 @@ package com.bots.RacoonClient.Views.Main;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.bots.RacoonShared.Discord.Channel;
+import com.bots.RacoonShared.Discord.ServerChannels;
 
 import javax.swing.*;
 import java.awt.*;

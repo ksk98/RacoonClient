@@ -3,6 +3,8 @@ package com.bots.RacoonClient.Communication;
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingMessageHandler;
+import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingServerChannelListHandler;
+import com.bots.RacoonClient.Events.IncomingDataEvents.SSLFinishHandler;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RacoonClient.Loggers.WindowLogger;
 import com.bots.RacoonClient.Views.Main.MainWindow;
@@ -87,6 +89,10 @@ public class ConnectionSocketManager {
                     int responseCode = response.getInt("response_code");
                     if (responseCode == 200 || responseCode == 204) {
                         WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
+
+                        builder.clear();
+                        builder.setData(new JSONObject().put("operation", "requestServerChannels")).setWaitForResponse(false);
+                        trafficManager.queueOperation(builder.build());
                     } else {
                         try {
                             WindowManager.displayError(response.getString("message"), "Login failed");
@@ -114,11 +120,10 @@ public class ConnectionSocketManager {
     }
 
     private IncomingDataTrafficHandler createHandlerChain() {
-        return new IncomingMessageHandler(
-                new IncomingLogHandler(null),
-                new MessageOutput(
-                        ((MainWindow) WindowManager.getInstance().getView(WindowManager.View.MAIN))
-                                .getMessagesContentPane())
-        );
+        IncomingDataTrafficHandler chain = new IncomingMessageHandler(new MessageOutput(WindowManager.getInstance().getMainWindowController()));
+        chain.setNext(new IncomingLogHandler())
+                .setNext(new IncomingServerChannelListHandler(WindowManager.getInstance().getMainWindowController()))
+                .setNext(new SSLFinishHandler());
+        return chain;
     }
 }
