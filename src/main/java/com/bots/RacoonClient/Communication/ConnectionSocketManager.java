@@ -13,6 +13,7 @@ import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
 import com.bots.RacoonClient.WindowManager;
+import com.bots.RacoonShared.SocketCommunication.SocketOperationIdentifiers;
 import org.json.*;
 
 import javax.net.ssl.SSLSocket;
@@ -62,7 +63,7 @@ public class ConnectionSocketManager {
 
     public void disconnect() throws IOException {
         if (!isDisconnected())
-            CommunicationUtil.sendTo(out, new JSONObject().put("operation", "disconnect"));
+            CommunicationUtil.sendTo(out, new JSONObject().put("operation", SocketOperationIdentifiers.CLIENT_DISCONNECT));
 
         if (in != null) in.close();
         if (out != null) out.close();
@@ -78,7 +79,7 @@ public class ConnectionSocketManager {
             return;
 
         JSONObject loginJSON = new JSONObject()
-                .put("operation", "login")
+                .put("operation", SocketOperationIdentifiers.CLIENT_LOGIN)
                 .put("username", username)
                 .put("password", password);
 
@@ -91,7 +92,9 @@ public class ConnectionSocketManager {
                         WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
 
                         builder.clear();
-                        builder.setData(new JSONObject().put("operation", "requestServerChannels")).setWaitForResponse(false);
+                        builder
+                                .setData(new JSONObject().put("operation", SocketOperationIdentifiers.REQUEST_SERVER_CHANNEL_LIST))
+                                .setWaitForResponse(false);
                         trafficManager.queueOperation(builder.build());
                     } else {
                         try {

@@ -1,15 +1,18 @@
 package com.bots.RacoonClient.Events.IncomingDataEvents;
 
 import com.bots.RacoonClient.Loggers.WindowLogger;
-import com.bots.RacoonShared.IncomingDataHandlers.BaseIncomingDataTrafficHandler;
+import com.bots.RacoonShared.IncomingDataHandlers.IncomingOperationHandler;
+import com.bots.RacoonShared.SocketCommunication.SocketOperationIdentifiers;
 import org.json.JSONObject;
 
-public class SSLFinishHandler extends BaseIncomingDataTrafficHandler {
+public class SSLFinishHandler extends IncomingOperationHandler {
+
+    public SSLFinishHandler() {
+        super(SocketOperationIdentifiers.SSL_HANDSHAKE_COMPLETE);
+    }
 
     @Override
-    public void handle(JSONObject data) {
-        if (data.get("operation").equals("sslFinished")) {
-            WindowLogger.getInstance().logSuccess(getClass().getName(), "SSL handshake completed.");
-        } else super.handle(data);
+    public void consume(JSONObject jsonObject) {
+        WindowLogger.getInstance().logSuccess(getClass().getName(), "SSL handshake completed.");
     }
 }
