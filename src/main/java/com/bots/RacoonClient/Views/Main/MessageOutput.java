@@ -12,13 +12,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class MessageOutput {
-    private final MainWindowController mainWindowController;
+    private final MainViewController mainViewController;
     private StyledDocument currentDocument = null;
     private final Map<Entry<String, String>, MutableAttributeSet> userAttributes;
     private final MutableAttributeSet messageAttribute, botAttribute;
 
-    public MessageOutput(MainWindowController mainWindowController) {
-        this.mainWindowController = mainWindowController;
+    public MessageOutput(MainViewController mainViewController) {
+        this.mainViewController = mainViewController;
         userAttributes = new HashMap<>();
         messageAttribute = new SimpleAttributeSet();
 //        StyleConstants.setLeftIndent(messageAttribute, 32);
@@ -65,7 +65,7 @@ public class MessageOutput {
     }
 
     private void selectDocument(String serverId, String channelId) {
-        currentDocument = mainWindowController.getDocumentFor(serverId, channelId);
+        currentDocument = mainViewController.getDocumentFor(serverId, channelId);
     }
 
     private void append(String message, AttributeSet attributes) throws BadLocationException {

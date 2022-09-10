@@ -1,20 +1,13 @@
-package com.bots.RacoonClient.Views;
+package com.bots.RacoonClient.Views.Login;
 
-import com.bots.RacoonClient.Communication.ConnectionSocketManager;
-import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
 
-public class LoginWindow extends JFrame {
+public class LoginView extends JFrame {
     private JTextField URLField;
     private JTextField usernameField;
     private JButton loginButton;
@@ -24,61 +17,40 @@ public class LoginWindow extends JFrame {
     private JTextField portField;
 
     // TODO: save input if checkbox says so
-    public LoginWindow(String title) throws HeadlessException {
+    public LoginView(String title) throws HeadlessException {
         super(title);
         setContentPane(contentPanel);
         setMinimumSize(new Dimension(200, 100));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
-
-        KeyListener loginOnEnter = new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER)
-                    login();
-            }
-        };
-
-        URLField.addKeyListener(loginOnEnter);
-        portField.addKeyListener(loginOnEnter);
-        usernameField.addKeyListener(loginOnEnter);
-        passwordField.addKeyListener(loginOnEnter);
-
-        loginButton.addActionListener(event -> login());
     }
 
-    private void login() {
-        ConnectionSocketManager connectionSocketManager = ConnectionSocketManager.getInstance();
-        int port;
-        try {
-            port = Integer.parseInt(portField.getText());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid port.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+    public JTextField getURLField() {
+        return URLField;
+    }
 
-        try {
-            if (connectionSocketManager.isDisconnected())
-                connectionSocketManager.connectTo(URLField.getText(), port);
-        } catch (UnknownHostException e) {
-            JOptionPane.showMessageDialog(this, "Unknown address: " + e.getMessage(), "Unknown address", JOptionPane.ERROR_MESSAGE);
-        } catch (ConnectException e) {
-            JOptionPane.showMessageDialog(this, "Could not connect to address.", "Connection error", JOptionPane.ERROR_MESSAGE);
-        } catch (IOException | SocketFactoryFailureException e) {
-            JOptionPane.showMessageDialog(this, e, "Error", JOptionPane.ERROR_MESSAGE);
-        }
+    public JTextField getUsernameField() {
+        return usernameField;
+    }
 
-        connectionSocketManager.login(usernameField.getText(), String.valueOf(passwordField.getPassword()));
+    public JButton getLoginButton() {
+        return loginButton;
+    }
+
+    public JPasswordField getPasswordField() {
+        return passwordField;
+    }
+
+    public JCheckBox getRememberMeCheckBox() {
+        return rememberMeCheckBox;
+    }
+
+    public JPanel getContentPanel() {
+        return contentPanel;
+    }
+
+    public JTextField getPortField() {
+        return portField;
     }
 
     {

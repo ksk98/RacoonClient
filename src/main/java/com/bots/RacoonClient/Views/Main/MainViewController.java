@@ -1,7 +1,10 @@
 package com.bots.RacoonClient.Views.Main;
 
+import com.bots.RacoonClient.Config;
+import com.bots.RacoonClient.Views.BaseViewController;
 import com.bots.RacoonShared.Discord.Channel;
 import com.bots.RacoonShared.Discord.ServerChannels;
+
 import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.StyledDocument;
@@ -12,27 +15,32 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-public class MainWindowController implements ServerChannelListConsumer {
-    private final MainWindow mainWindow;
+public class MainViewController extends BaseViewController implements ServerChannelListConsumer {
+    private final MainView view;
     private final JComboBox<ServerChannels> serverPicker;
     private final JComboBox<Channel> channelPicker;
     private final Map<Entry<String, String>, StyledDocument> serverChannelDocument;
     private final Map<String, ServerChannels> serverChannelsMap;
 
-    public MainWindowController(MainWindow mainWindow) {
+    public MainViewController() {
+        super(new MainView(Config.windowTitle));
+        this.view = (MainView) super.getView();
         this.serverChannelDocument = new HashMap<>();
-        serverChannelsMap = new HashMap<>();
+        this.serverChannelsMap = new HashMap<>();
+        this.serverPicker = view.getMessagesTabServerPickBox();
+        this.channelPicker = view.getMessagesTabChannelPickBox();
+        addListeners();
+    }
 
-        this.mainWindow = mainWindow;
-        this.serverPicker = mainWindow.getMessagesTabServerPickBox();
+    private void addListeners() {
         this.serverPicker.addItemListener(e -> {
             refreshForNewServerSelection();
         });
-        this.channelPicker = mainWindow.getMessagesTabChannelPickBox();
+
         this.channelPicker.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 serverChannelsMap.get(getSelectedServerId()).setLastSelectedChannelIndex(channelPicker.getSelectedIndex());
-                mainWindow.getMessagesContentPane().setDocument(getDocumentForCurrent());
+                view.getMessagesContentPane().setDocument(getDocumentForCurrent());
             }
         });
     }
@@ -81,7 +89,7 @@ public class MainWindowController implements ServerChannelListConsumer {
             }
         }
 
-        mainWindow.getMessagesContentPane().setDocument(getDocumentFor(getSelectedServerId(), getSelectedChannelId()));
+        view.getMessagesContentPane().setDocument(getDocumentFor(getSelectedServerId(), getSelectedChannelId()));
     }
 
     private StyledDocument getDocumentForCurrent() {
@@ -102,5 +110,9 @@ public class MainWindowController implements ServerChannelListConsumer {
         } catch (NullPointerException ignored) {
             return null;
         }
+    }
+
+    public MainView getView() {
+        return view;
     }
 }

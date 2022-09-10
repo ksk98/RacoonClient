@@ -1,7 +1,7 @@
 package com.bots.RacoonClient.Communication;
 
 import com.bots.RacoonClient.Loggers.WindowLogger;
-import com.bots.RacoonClient.WindowManager;
+import com.bots.RacoonClient.Views.ViewManager;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.Logging.Loggers.Logger;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
@@ -9,7 +9,6 @@ import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperation;
 import org.json.JSONObject;
 
 import javax.net.ssl.SSLSocket;
-import javax.swing.*;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
@@ -86,10 +85,10 @@ public class TrafficManager extends Thread {
             if (socketConnection.isClosed()) {
                 try {
                     socketConnection.socket.close();
-                    WindowManager.displayError(
+                    ViewManager.displayError(
                             "Connection with host has been lost.", "Connection was lost");
                 } catch (IOException e) {
-                    WindowManager.displayError(
+                    ViewManager.displayError(
                             "Connection with host has been lost and the socket could not be closed.",
                             "Connection was lost"
                     );

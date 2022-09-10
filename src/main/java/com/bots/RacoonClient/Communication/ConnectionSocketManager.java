@@ -7,12 +7,12 @@ import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingServerChannelList
 import com.bots.RacoonClient.Events.IncomingDataEvents.SSLFinishHandler;
 import com.bots.RacoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RacoonClient.Loggers.WindowLogger;
-import com.bots.RacoonClient.Views.Main.MainWindow;
+import com.bots.RacoonClient.Views.Main.MainViewController;
 import com.bots.RacoonClient.Views.Main.MessageOutput;
 import com.bots.RacoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
 import com.bots.RacoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RacoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
-import com.bots.RacoonClient.WindowManager;
+import com.bots.RacoonClient.Views.ViewManager;
 import com.bots.RacoonShared.SocketCommunication.SocketOperationIdentifiers;
 import org.json.*;
 
@@ -50,7 +50,7 @@ public class ConnectionSocketManager {
         try {
             socket.startHandshake();
         } catch (SocketTimeoutException e) {
-            WindowManager.displayError("Connection timed out.", "Connection timeout");
+            ViewManager.displayError("Connection timed out.", "Connection timeout");
             disconnect();
             return;
         }
@@ -89,7 +89,7 @@ public class ConnectionSocketManager {
                 .setOnResponseReceived(response -> {
                     int responseCode = response.getInt("response_code");
                     if (responseCode == 200 || responseCode == 204) {
-                        WindowManager.getInstance().changeViewTo(WindowManager.View.MAIN);
+                        ViewManager.getInstance().changeViewTo(ViewManager.View.MAIN);
 
                         builder.clear();
                         builder
@@ -98,20 +98,31 @@ public class ConnectionSocketManager {
                         trafficManager.queueOperation(builder.build());
                     } else {
                         try {
-                            WindowManager.displayError(response.getString("message"), "Login failed");
+                            ViewManager.displayError(response.getString("message"), "Login failed");
                         } catch (JSONException e) {
-                            WindowManager.displayError("Could not login.", "Login failed");
+                            ViewManager.displayError("Could not login.", "Login failed");
                         }
 
                         try {
                             disconnect();
                         } catch (IOException e) {
-                            WindowManager.displayError(
+                            ViewManager.displayError(
                                     "Could not disconnect properly.", "Disconnect failed.");
                         }
                     }
-                }).setOnErrorEncountered(WindowManager::displayError)
+                }).setOnErrorEncountered(ViewManager::displayError)
                 .build());
+    }
+
+    private IncomingDataTrafficHandler createHandlerChain() {
+        MainViewController mainViewController = (MainViewController) ViewManager.getInstance().getController(ViewManager.View.MAIN);
+
+        IncomingDataTrafficHandler chain = new IncomingMessageHandler(new MessageOutput(mainViewController));
+        chain   .setNext(new IncomingLogHandler())
+                .setNext(new IncomingServerChannelListHandler(mainViewController))
+                .setNext(new SSLFinishHandler());
+
+        return chain;
     }
 
     public boolean isDisconnected() {
@@ -120,13 +131,5 @@ public class ConnectionSocketManager {
 
     public boolean isLoggedIn() {
         return loggedIn;
-    }
-
-    private IncomingDataTrafficHandler createHandlerChain() {
-        IncomingDataTrafficHandler chain = new IncomingMessageHandler(new MessageOutput(WindowManager.getInstance().getMainWindowController()));
-        chain.setNext(new IncomingLogHandler())
-                .setNext(new IncomingServerChannelListHandler(WindowManager.getInstance().getMainWindowController()))
-                .setNext(new SSLFinishHandler());
-        return chain;
     }
 }

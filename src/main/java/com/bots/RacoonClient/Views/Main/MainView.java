@@ -8,7 +8,7 @@ import com.bots.RacoonShared.Discord.ServerChannels;
 import javax.swing.*;
 import java.awt.*;
 
-public class MainWindow extends JFrame {
+public class MainView extends JFrame {
     private JPanel contentPanel;
     private JTabbedPane contentPanelTabs;
     private JTextPane messagesContentPane;
@@ -23,7 +23,7 @@ public class MainWindow extends JFrame {
     private JScrollPane sendMessageScrollPane;
     private JScrollPane logsScrollPane;
 
-    public MainWindow(String title) throws HeadlessException {
+    public MainView(String title) throws HeadlessException {
         super(title);
         setContentPane(contentPanel);
         setMinimumSize(new Dimension(850, 550));
