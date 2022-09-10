@@ -105,17 +105,14 @@ public class TrafficManager extends Thread {
 
                 try {
                     CommunicationUtil.sendTo(socketConnection.out, request);
-                    System.out.println("SENDING: " + request);
-                    if (socketConnection.out.checkError()) {
-                        operations.get(idToSend).getOnErrorEncountered().accept("PrintWriter failed to send request: " + request);
-                        removeOperation(idToSend);
-                    }
                 } catch (IOException e) {
                     WindowLogger.getInstance().logError(
                             getClass().getName(),
                             "Failed to send request: " + request + " (" + e + ")"
                     );
+                    removeOperation(idToSend);
                 }
+                System.out.println("SENDING: " + request);
             }
 
             JSONObject incomingData;
