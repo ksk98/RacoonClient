@@ -75,7 +75,7 @@ public class ConnectionSocketManager {
     }
 
     public void login(String username, String password) {
-        if (isDisconnected())
+        if (isDisconnected() || isLoggedIn())
             return;
 
         JSONObject loginJSON = new JSONObject()

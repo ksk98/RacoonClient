@@ -53,7 +53,6 @@ public class MainViewController extends BaseViewController implements ServerChan
             serverPicker.addItem(sc);
         });
 
-        serverChannelDocument.clear();
         refreshForNewServerSelection();
     }
 
@@ -74,9 +73,10 @@ public class MainViewController extends BaseViewController implements ServerChan
             return;
 
         ServerChannels serverChannels = serverChannelsMap.get(serverId);
-        channelPicker.removeAll();
+        channelPicker.removeAllItems();
 
         serverChannels.channels.forEach(channelPicker::addItem);
+
         if (channelPicker.getItemCount() > 0) {
             // If channel list changed this may not select the right last picked channel
             // However, the index should be reset if the list of channels is changed and

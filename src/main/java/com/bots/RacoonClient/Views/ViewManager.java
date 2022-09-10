@@ -55,11 +55,12 @@ public class ViewManager {
         getView(View.MAIN).addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                super.windowClosed(e);
                 try {
                     ConnectionSocketManager.getInstance().disconnect();
+                    System.exit(0);
                 } catch (IOException ex) {
                     ex.printStackTrace();
+                    System.exit(1);
                 }
             }
         });
