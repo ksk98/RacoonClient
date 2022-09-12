@@ -55,6 +55,7 @@ public class ViewManager {
         getView(View.MAIN).addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
+                // TODO: doesn't work
                 try {
                     ConnectionSocketManager.getInstance().disconnect();
                     System.exit(0);

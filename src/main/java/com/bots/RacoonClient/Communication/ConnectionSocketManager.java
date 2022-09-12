@@ -1,5 +1,6 @@
 package com.bots.RacoonClient.Communication;
 
+import com.bots.RacoonClient.Communication.Outbound.OutboundTrafficService;
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingLogHandler;
 import com.bots.RacoonClient.Events.IncomingDataEvents.IncomingMessageHandler;
@@ -27,7 +28,7 @@ public class ConnectionSocketManager {
     private SSLSocket socket = null;
     private boolean loggedIn = false;
 
-    private PrintWriter out = null;
+    private BufferedWriter out = null;
     private DataInputStream in = null;
     private TrafficManager trafficManager = null;
 
@@ -55,10 +56,12 @@ public class ConnectionSocketManager {
             return;
         }
 
-        out = new PrintWriter(socket.getOutputStream());
+        out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         in = new DataInputStream(socket.getInputStream());
         trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), createHandlerChain());
         trafficManager.start();
+
+        OutboundTrafficService.getInstance().setTrafficManager(trafficManager);
     }
 
     public void disconnect() throws IOException {

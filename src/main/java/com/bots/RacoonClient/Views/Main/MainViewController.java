@@ -1,7 +1,9 @@
 package com.bots.RacoonClient.Views.Main;
 
+import com.bots.RacoonClient.Communication.Outbound.OutboundTrafficService;
 import com.bots.RacoonClient.Config;
 import com.bots.RacoonClient.Views.BaseViewController;
+import com.bots.RacoonShared.Discord.BotMessage;
 import com.bots.RacoonShared.Discord.Channel;
 import com.bots.RacoonShared.Discord.ServerChannels;
 
@@ -9,6 +11,9 @@ import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.StyledDocument;
 import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,15 +38,41 @@ public class MainViewController extends BaseViewController implements ServerChan
     }
 
     private void addListeners() {
-        this.serverPicker.addItemListener(e -> {
+        serverPicker.addItemListener(e -> {
             refreshForNewServerSelection();
         });
 
-        this.channelPicker.addItemListener(e -> {
+        channelPicker.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 serverChannelsMap.get(getSelectedServerId()).setLastSelectedChannelIndex(channelPicker.getSelectedIndex());
                 view.getMessagesContentPane().setDocument(getDocumentForCurrent());
             }
+        });
+
+        view.getSendMessageContentPane().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (e.isShiftDown())
+                        view.getSendMessageContentPane().append("\n");
+                    else
+                        sendMessage();
+                }
+            }
+        });
+
+        view.getSendMessageButton().addActionListener(e -> {
+            sendMessage();
         });
     }
 
@@ -62,6 +93,18 @@ public class MainViewController extends BaseViewController implements ServerChan
             serverChannelDocument.put(key, new DefaultStyledDocument());
 
         return serverChannelDocument.get(key);
+    }
+
+    private void sendMessage() {
+        String message = view.getSendMessageContentPane().getText();
+        if (Objects.requireNonNullElse(getSelectedServerId(), "").equals("") ||
+                Objects.requireNonNullElse(getSelectedChannelId(), "").equals("") || message.equals(""))
+            return;
+
+        OutboundTrafficService.getInstance().sendMessage(
+                new BotMessage(getSelectedServerId(), getSelectedChannelId(), message));
+
+        view.getSendMessageContentPane().setText("");
     }
 
     private void refreshForNewServerSelection() {
