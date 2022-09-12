@@ -11,7 +11,7 @@ repositories {
 
 jar {
     manifest {
-        attributes "Main-Class": "com.bots.RacoonClient.ApplicationMain"
+        attributes "Main-Class": "com.bots.RaccoonClient.ApplicationMain"
     }
 
     from {
@@ -25,7 +25,7 @@ dependencies {
     // JSON parsing
     implementation 'org.json:json:20220320'
     // Server and client shared code
-    implementation files("./libs/RacoonShared.jar")
+    implementation files("./libs/RaccoonShared.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
