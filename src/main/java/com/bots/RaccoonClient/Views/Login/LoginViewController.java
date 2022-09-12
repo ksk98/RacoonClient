@@ -1,9 +1,11 @@
 package com.bots.RaccoonClient.Views.Login;
 
+import com.bots.RaccoonClient.CacheFilesManager;
 import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
 import com.bots.RaccoonClient.Config;
 import com.bots.RaccoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RaccoonClient.Views.BaseViewController;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -19,6 +21,7 @@ public class LoginViewController extends BaseViewController {
         super(new LoginView(Config.windowTitle));
         this.view = (LoginView) super.getView();
         addListeners();
+        readLoginCache();
     }
 
     private void addListeners() {
@@ -63,6 +66,9 @@ public class LoginViewController extends BaseViewController {
                     view.getUsernameField().getText(),
                     String.valueOf(view.getPasswordField().getPassword())
             );
+
+            if (view.getRememberMeCheckBox().isSelected())
+                writeLoginCache();
         } catch (UnknownHostException e) {
             showError("Unknown address: " + e, "Unknown address");
         } catch (ConnectException e) {
@@ -70,6 +76,26 @@ public class LoginViewController extends BaseViewController {
         } catch (IOException | SocketFactoryFailureException e) {
             showError(e.toString());
         }
+    }
+
+    private void readLoginCache() {
+        JSONObject cache = CacheFilesManager.getCacheIfExists(CacheFilesManager.loginCacheFilePath);
+        if (cache == null)
+            return;
+
+        view.getURLField().setText(cache.getString("url"));
+        view.getPortField().setText(cache.getString("port"));
+        view.getUsernameField().setText(cache.getString("username"));
+        view.getPasswordField().requestFocus();
+    }
+
+    private void writeLoginCache() {
+        JSONObject content = new JSONObject();
+        content.put("url", view.getURLField().getText())
+                .put("port", view.getPortField().getText())
+                .put("username", view.getUsernameField().getText());
+
+        CacheFilesManager.writeCache(CacheFilesManager.loginCacheFilePath, content);
     }
 
     public LoginView getView() {
