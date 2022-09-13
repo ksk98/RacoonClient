@@ -9,13 +9,8 @@ This project consists of 3 repositories:
 - [Shared library](https://github.com/ksk98/RacoonShared "Raccoon shared") that is used both by the server and client
 
 ## Features
-
-   - Swing based interface
-   
-   - Secure communication with the server
-   
-   - Cachable connection credentials
-   
-   - Read received messages and talk as bot
-   
-   - Monitor server logs
+- Swing based interface
+- Secure communication with the server
+- Cachable connection credentials
+- Read received messages and talk as bot
+- Monitor server logs
