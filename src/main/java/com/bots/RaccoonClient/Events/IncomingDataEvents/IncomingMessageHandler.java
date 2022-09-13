@@ -3,14 +3,14 @@ package com.bots.RaccoonClient.Events.IncomingDataEvents;
 import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.Main.MessageOutput;
 import com.bots.RaccoonShared.Discord.MessageLog;
-import com.bots.RaccoonShared.IncomingDataHandlers.IncomingOperationHandler;
+import com.bots.RaccoonShared.IncomingDataHandlers.JSONOperationHandler;
 import com.bots.RaccoonShared.SocketCommunication.SocketOperationIdentifiers;
 import com.bots.RaccoonShared.Util.SerializationUtil;
 import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class IncomingMessageHandler extends IncomingOperationHandler {
+public class IncomingMessageHandler extends JSONOperationHandler {
     private final MessageOutput output;
 
     public IncomingMessageHandler(MessageOutput output) {

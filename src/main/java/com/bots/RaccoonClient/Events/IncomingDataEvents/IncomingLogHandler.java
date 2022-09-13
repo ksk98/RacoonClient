@@ -1,7 +1,7 @@
 package com.bots.RaccoonClient.Events.IncomingDataEvents;
 
 import com.bots.RaccoonClient.Loggers.WindowLogger;
-import com.bots.RaccoonShared.IncomingDataHandlers.IncomingOperationHandler;
+import com.bots.RaccoonShared.IncomingDataHandlers.JSONOperationHandler;
 import com.bots.RaccoonShared.Logging.Log;
 import com.bots.RaccoonShared.SocketCommunication.SocketOperationIdentifiers;
 import com.bots.RaccoonShared.Util.SerializationUtil;
@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class IncomingLogHandler extends IncomingOperationHandler {
+public class IncomingLogHandler extends JSONOperationHandler {
 
     public IncomingLogHandler() {
         super(SocketOperationIdentifiers.LOG_SERVER_LOG_TO_CLIENT);

@@ -3,7 +3,7 @@ package com.bots.RaccoonClient.Events.IncomingDataEvents;
 import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.Main.ServerChannelListConsumer;
 import com.bots.RaccoonShared.Discord.ServerChannels;
-import com.bots.RaccoonShared.IncomingDataHandlers.IncomingOperationHandler;
+import com.bots.RaccoonShared.IncomingDataHandlers.JSONOperationHandler;
 import com.bots.RaccoonShared.SocketCommunication.SocketOperationIdentifiers;
 import com.bots.RaccoonShared.Util.SerializationUtil;
 import org.json.JSONObject;
@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.List;
 
-public class IncomingServerChannelListHandler extends IncomingOperationHandler {
+public class IncomingServerChannelListHandler extends JSONOperationHandler {
     private final ServerChannelListConsumer serverChannelListConsumer;
 
     public IncomingServerChannelListHandler(ServerChannelListConsumer serverChannelListConsumer) {

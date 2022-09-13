@@ -3,9 +3,9 @@ package com.bots.RaccoonClient.Loggers;
 import com.bots.RaccoonClient.Views.Main.LogOutput;
 import com.bots.RaccoonShared.Logging.Exceptions.LogException;
 import com.bots.RaccoonShared.Logging.Log;
-import com.bots.RaccoonShared.Logging.Loggers.LoggerBase;
+import com.bots.RaccoonShared.Logging.Loggers.Logger;
 
-public class WindowLogger extends LoggerBase implements RemoteLogger {
+public class WindowLogger extends Logger implements RemoteLogger {
     private static WindowLogger instance = null;
     private LogOutput target = null;
 
