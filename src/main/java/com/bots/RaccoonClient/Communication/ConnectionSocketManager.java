@@ -26,7 +26,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 
 public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
@@ -90,13 +89,6 @@ public class ConnectionSocketManager {
         try {connection.setSoTimeout(Config.SocketTimeoutMS);}
         catch (SocketException e) {
             throw new CommunicationEstablishException("Could not set timeout for socket: " + e);
-        }
-
-        try {connection.startHandshake();}
-        catch (SocketTimeoutException e) {
-            throw new CommunicationEstablishException("Socket timed out.");
-        } catch (IOException e) {
-            throw new CommunicationEstablishException("Could not execute SSL handshake: " + e);
         }
 
         return connection;
