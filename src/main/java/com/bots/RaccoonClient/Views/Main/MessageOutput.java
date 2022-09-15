@@ -29,14 +29,14 @@ public class MessageOutput {
     }
 
     public void LogMessage(MessageLog message) {
-        selectDocument(message.serverId, message.channelId);
+        selectDocument(message.serverId(), message.channelId());
 
-        Entry<String, String> userAttributeKey = Map.entry(message.serverId, message.username);
+        Entry<String, String> userAttributeKey = Map.entry(message.serverId(), message.username());
         MutableAttributeSet userAttribute = userAttributes.get(userAttributeKey);
         if (userAttribute == null) {
             userAttribute = new SimpleAttributeSet();
-            if (message.userColor != null)
-                StyleConstants.setForeground(userAttribute, message.userColor);
+            if (message.userColor() != null)
+                StyleConstants.setForeground(userAttribute, message.userColor());
             else {
                 WindowLogger.getInstance().logInfo(
                         getClass().getName(),
@@ -55,8 +55,8 @@ public class MessageOutput {
                 append("[BOT]", botAttribute);
                 append(" ", messageAttribute);
             }
-            append(message.username + ": ", userAttribute);
-            append(message.message, messageAttribute);
+            append(message.username() + ": ", userAttribute);
+            append(message.message(), messageAttribute);
             if (message.hasEmbeds()) append(" /embeded media/", messageAttribute);
             append("\n", messageAttribute);
         } catch (BadLocationException e) {
