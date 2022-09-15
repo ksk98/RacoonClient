@@ -1,8 +1,9 @@
 package com.bots.RaccoonClient.Communication;
 
+import com.bots.RaccoonClient.Exceptions.SocketConnectionCreationException;
 import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.ViewManager;
-import com.bots.RaccoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
+import com.bots.RaccoonShared.IncomingDataHandlers.IJSONDataHandler;
 import com.bots.RaccoonShared.Logging.Loggers.Logger;
 import com.bots.RaccoonShared.SocketCommunication.CommunicationUtil;
 import com.bots.RaccoonShared.SocketCommunication.SocketCommunicationOperation;
@@ -28,7 +29,7 @@ public class TrafficManager extends Thread {
     private final Queue<Integer> idToSendQueue;
     private int nextId;
 
-    private final IncomingDataTrafficHandler incomingDataHandler;
+    private final IJSONDataHandler incomingDataHandler;
 
     /***
      * @param socket socket which traffic will be going through
@@ -36,7 +37,7 @@ public class TrafficManager extends Thread {
      * @param handlerChain chain of responsibility that utilises IncomingDataTrafficHandler interface, used in
      *                     handling incoming traffic that is not part of any queued operations
      */
-    public TrafficManager(SSLSocket socket, Logger logger, IncomingDataTrafficHandler handlerChain) throws IOException {
+    public TrafficManager(SSLSocket socket, Logger logger, IJSONDataHandler handlerChain) throws SocketConnectionCreationException {
         this.socketConnection = new SocketConnection(socket);
         this.logger = logger;
 
@@ -99,13 +100,15 @@ public class TrafficManager extends Thread {
 
             if (!idToSendQueue.isEmpty()) {
                 Integer idToSend = idToSendQueue.poll();
-                JSONObject request = operations.get(idToSend).getRequest();
-                if (operations.get(idToSend).waitForResponse())
+                SocketCommunicationOperation operation = operations.get(idToSend);
+                JSONObject request = operation.getContent();
+                if (operation.waitForResponse())
                     request.put("client_operation_id", idToSend);
 
                 try {
                     CommunicationUtil.sendTo(socketConnection.out, request);
                 } catch (IOException e) {
+                    operation.getOnErrorEncountered().accept(e.toString());
                     WindowLogger.getInstance().logError(
                             getClass().getName(),
                             "Failed to send request: " + request + " (" + e + ")"

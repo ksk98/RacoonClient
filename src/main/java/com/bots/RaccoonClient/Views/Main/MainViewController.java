@@ -1,11 +1,16 @@
 package com.bots.RaccoonClient.Views.Main;
 
-import com.bots.RaccoonClient.Communication.Outbound.OutboundTrafficService;
+import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
+import com.bots.RaccoonClient.Communication.SocketOperationQueueingService;
 import com.bots.RaccoonClient.Config;
+import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedSubscriber;
 import com.bots.RaccoonClient.Views.BaseViewController;
 import com.bots.RaccoonShared.Discord.BotMessage;
 import com.bots.RaccoonShared.Discord.Channel;
 import com.bots.RaccoonShared.Discord.ServerChannels;
+import com.bots.RaccoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
+import com.bots.RaccoonShared.SocketCommunication.SocketOperationIdentifiers;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;
@@ -19,7 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-public class MainViewController extends BaseViewController implements ServerChannelListConsumer {
+public class MainViewController extends BaseViewController implements ServerChannelListConsumer, ClientAuthorizedSubscriber {
     private final MainView view;
     private final JComboBox<ServerChannels> serverPicker;
     private final JComboBox<Channel> channelPicker;
@@ -34,6 +39,8 @@ public class MainViewController extends BaseViewController implements ServerChan
         this.serverPicker = view.getMessagesTabServerPickBox();
         this.channelPicker = view.getMessagesTabChannelPickBox();
         addListeners();
+
+        ConnectionSocketManager.getInstance().getClientAuthorizedEventPublisher().subscribe(this);
     }
 
     private void addListeners() {
@@ -100,7 +107,7 @@ public class MainViewController extends BaseViewController implements ServerChan
                 Objects.requireNonNullElse(getSelectedChannelId(), "").equals("") || message.equals(""))
             return;
 
-        OutboundTrafficService.getInstance().sendMessage(
+        SocketOperationQueueingService.getInstance().queueOperation(
                 new BotMessage(getSelectedServerId(), getSelectedChannelId(), message));
 
         view.getSendMessageContentPane().setText("");
@@ -156,5 +163,12 @@ public class MainViewController extends BaseViewController implements ServerChan
 
     public MainView getView() {
         return view;
+    }
+
+    @Override
+    public void onClientAuthorization() {
+        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
+        builder.setData(new JSONObject().put("operation", SocketOperationIdentifiers.REQUEST_SERVER_CHANNEL_LIST));
+        SocketOperationQueueingService.getInstance().queueOperation(builder.build());
     }
 }

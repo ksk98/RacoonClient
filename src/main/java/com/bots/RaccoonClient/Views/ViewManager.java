@@ -1,6 +1,7 @@
 package com.bots.RaccoonClient.Views;
 
 import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
+import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedSubscriber;
 import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.Login.LoginViewController;
 import com.bots.RaccoonClient.Views.Main.LogOutput;
@@ -9,11 +10,11 @@ import com.bots.RaccoonClient.Views.Main.MainViewController;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ViewManager {
+public class ViewManager implements ClientAuthorizedSubscriber {
+
     public enum View {
         LOGIN, MAIN
     }
@@ -26,6 +27,7 @@ public class ViewManager {
         createViews();
         currentView = View.LOGIN;
         getCurrentView().setVisible(true);
+        ConnectionSocketManager.getInstance().getClientAuthorizedEventPublisher().subscribe(this);
     }
 
     public static ViewManager getInstance() {
@@ -51,15 +53,9 @@ public class ViewManager {
 
         getView(View.MAIN).addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosed(WindowEvent e) {
-                // TODO: doesn't work
-                try {
-                    ConnectionSocketManager.getInstance().disconnect();
-                    System.exit(0);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    System.exit(1);
-                }
+            public void windowClosing(WindowEvent e) {
+                ConnectionSocketManager.getInstance().disconnect();
+                System.exit(0);
             }
         });
     }
@@ -94,5 +90,10 @@ public class ViewManager {
 
     public JFrame getView(View view) {
         return getController(view).getView();
+    }
+
+    @Override
+    public void onClientAuthorization() {
+        changeViewTo(View.MAIN);
     }
 }

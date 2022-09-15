@@ -3,16 +3,13 @@ package com.bots.RaccoonClient.Views.Login;
 import com.bots.RaccoonClient.CacheFilesManager;
 import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
 import com.bots.RaccoonClient.Config;
-import com.bots.RaccoonClient.Exceptions.SocketFactoryFailureException;
+import com.bots.RaccoonClient.Exceptions.CommunicationEstablishException;
 import com.bots.RaccoonClient.Views.BaseViewController;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
 
 public class LoginViewController extends BaseViewController {
     private final LoginView view;
@@ -48,33 +45,18 @@ public class LoginViewController extends BaseViewController {
     }
 
     private void login() {
-        ConnectionSocketManager connectionSocketManager = ConnectionSocketManager.getInstance();
         int port;
-
-        try {
-            port = Integer.parseInt(view.getPortField().getText());
-        } catch (NumberFormatException e) {
+        try {port = Integer.parseInt(getPort());}
+        catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(view, "Invalid port.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        try {
-            if (connectionSocketManager.isDisconnected())
-                connectionSocketManager.connectTo(view.getURLField().getText(), port);
+        ConnectionSocketManager connectionSocketManager = ConnectionSocketManager.getInstance();
 
-            connectionSocketManager.login(
-                    view.getUsernameField().getText(),
-                    String.valueOf(view.getPasswordField().getPassword())
-            );
-
-            if (view.getRememberMeCheckBox().isSelected())
-                writeLoginCache();
-        } catch (UnknownHostException e) {
-            showError("Unknown address: " + e, "Unknown address");
-        } catch (ConnectException e) {
-            showError("Could not connect to address.", "Connection error");
-        } catch (IOException | SocketFactoryFailureException e) {
-            showError(e.toString());
+        try {connectionSocketManager.establishCommunication(getURL(), port, getUsername(), getPassword());}
+        catch (CommunicationEstablishException e) {
+            showError(e.toString(), "Login failed");
         }
     }
 
@@ -100,5 +82,21 @@ public class LoginViewController extends BaseViewController {
 
     public LoginView getView() {
         return view;
+    }
+
+    private String getURL() {
+        return view.getURLField().getText();
+    }
+
+    private String getPort() {
+        return view.getPortField().getText();
+    }
+
+    private String getUsername() {
+        return view.getUsernameField().getText();
+    }
+
+    private String getPassword() {
+        return String.valueOf(view.getPasswordField().getPassword());
     }
 }

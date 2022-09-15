@@ -1,17 +1,22 @@
 package com.bots.RaccoonClient.Communication;
 
-import com.bots.RaccoonClient.Communication.Outbound.OutboundTrafficService;
 import com.bots.RaccoonClient.Config;
+import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedPublisher;
+import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedSubscriber;
 import com.bots.RaccoonClient.Events.IncomingDataEvents.IncomingLogHandler;
 import com.bots.RaccoonClient.Events.IncomingDataEvents.IncomingMessageHandler;
 import com.bots.RaccoonClient.Events.IncomingDataEvents.IncomingServerChannelListHandler;
 import com.bots.RaccoonClient.Events.IncomingDataEvents.SSLFinishHandler;
+import com.bots.RaccoonClient.Events.TrafficManagerInstantiatedEvent.TrafficManagerStatePublisher;
+import com.bots.RaccoonClient.Events.TrafficManagerInstantiatedEvent.TrafficManagerStateSubscriber;
+import com.bots.RaccoonClient.Exceptions.CommunicationEstablishException;
+import com.bots.RaccoonClient.Exceptions.SocketConnectionCreationException;
 import com.bots.RaccoonClient.Exceptions.SocketFactoryFailureException;
 import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.Main.MainViewController;
 import com.bots.RaccoonClient.Views.Main.MessageOutput;
-import com.bots.RaccoonShared.IncomingDataHandlers.IncomingDataTrafficHandler;
-import com.bots.RaccoonShared.SocketCommunication.CommunicationUtil;
+import com.bots.RaccoonShared.Events.Abstractions.IGenericPublisher;
+import com.bots.RaccoonShared.IncomingDataHandlers.IJSONDataHandler;
 import com.bots.RaccoonShared.SocketCommunication.SocketCommunicationOperationBuilder;
 import com.bots.RaccoonClient.Views.ViewManager;
 import com.bots.RaccoonShared.SocketCommunication.SocketOperationIdentifiers;
@@ -20,20 +25,27 @@ import org.json.*;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class ConnectionSocketManager {
     private static ConnectionSocketManager instance = null;
 
-    private SSLSocket socket = null;
-    private boolean loggedIn = false;
+    public enum State {
+        WAITING, CONNECTING, AUTHORIZING, ESTABLISHED, DISCONNECTING
+    }
+    private State currentState = State.WAITING;
 
-    private BufferedWriter out = null;
-    private DataInputStream in = null;
+    private final ClientAuthorizedPublisher clientAuthorizedPublisher;
+    private final TrafficManagerStatePublisher trafficManagerStatePublisher;
+
+    private SSLSocket socket = null;
     private TrafficManager trafficManager = null;
 
     private ConnectionSocketManager() {
         System.setProperty("javax.net.ssl.trustStore", Config.localKeystorePath);
+        clientAuthorizedPublisher = new ClientAuthorizedPublisher();
+        trafficManagerStatePublisher = new TrafficManagerStatePublisher();
     }
 
     public static ConnectionSocketManager getInstance() {
@@ -43,84 +55,136 @@ public class ConnectionSocketManager {
         return instance;
     }
 
-    public void connectTo(String host, int port) throws IOException, SocketFactoryFailureException {
-        SSLSocketFactory factory = SSLUtil.getSocketFactory();
-        socket = (SSLSocket)factory.createSocket(host, port);
-        socket.setSoTimeout(Config.SocketTimeoutMS);
+    public void establishCommunication(String host, int port, String username, String password) throws CommunicationEstablishException {
+        if (currentState != State.WAITING) return;
+
+        setCurrentState(State.CONNECTING);
 
         try {
-            socket.startHandshake();
-        } catch (SocketTimeoutException e) {
-            ViewManager.displayError("Connection timed out.", "Connection timeout");
-            disconnect();
-            return;
+            socket = createConnection(host, port);
+            setupTrafficManager();
+        } catch (CommunicationEstablishException e) {
+            clearCommunication();
+            throw e;
+        }
+        WindowLogger.getInstance().logSuccess(getClass().getName(), "Connection established!");
+
+        setCurrentState(State.AUTHORIZING);
+
+        attemptToAuthorize(username, password);
+    }
+
+    private SSLSocket createConnection(String host, int port) throws CommunicationEstablishException {
+        SSLSocketFactory factory;
+        SSLSocket connection;
+        try {factory = SSLUtil.getSocketFactory();}
+        catch (SocketFactoryFailureException e) {
+            throw new CommunicationEstablishException("Could not create SSLSocketFactory: " + e);
         }
 
-        out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        in = new DataInputStream(socket.getInputStream());
-        trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), createHandlerChain());
+        try {connection = (SSLSocket)factory.createSocket(host, port);}
+        catch (IOException e) {
+            throw new CommunicationEstablishException("Could not create SSLSocket: " + e);
+        }
+
+        try {connection.setSoTimeout(Config.SocketTimeoutMS);}
+        catch (SocketException e) {
+            throw new CommunicationEstablishException("Could not set timeout for socket: " + e);
+        }
+
+        try {connection.startHandshake();}
+        catch (SocketTimeoutException e) {
+            throw new CommunicationEstablishException("Socket timed out.");
+        } catch (IOException e) {
+            throw new CommunicationEstablishException("Could not execute SSL handshake: " + e);
+        }
+
+        return connection;
+    }
+
+    private void setupTrafficManager() throws CommunicationEstablishException {
+        try {
+            trafficManager = new TrafficManager(socket, WindowLogger.getInstance(), createHandlerChain());
+        } catch (SocketConnectionCreationException e) {
+            throw new CommunicationEstablishException("Could not create Traffic Manager: " + e);
+        }
+
         trafficManager.start();
-
-        OutboundTrafficService.getInstance().setTrafficManager(trafficManager);
+        trafficManagerStatePublisher.notifySubscribersOnCreation(trafficManager);
     }
 
-    public void disconnect() throws IOException {
-        if (!isDisconnected())
-            CommunicationUtil.sendTo(out, new JSONObject().put("operation", SocketOperationIdentifiers.CLIENT_DISCONNECT));
-
-        if (in != null) in.close();
-        if (out != null) out.close();
-        if (socket != null) socket.close();
-        if (trafficManager != null) trafficManager.stopRunning();
-
-        loggedIn = false;
-        socket = null;
-    }
-
-    public void login(String username, String password) {
-        if (isDisconnected() || isLoggedIn())
-            return;
-
-        JSONObject loginJSON = new JSONObject()
+    private void attemptToAuthorize(String username, String password) {
+        JSONObject content = new JSONObject()
                 .put("operation", SocketOperationIdentifiers.CLIENT_LOGIN)
                 .put("username", username)
                 .put("password", password);
 
         SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
-        trafficManager.queueOperation(builder
-                .setData(loginJSON)
+        builder.setData(content)
                 .setOnResponseReceived(response -> {
-                    int responseCode = response.getInt("response_code");
-                    if (responseCode == 200 || responseCode == 204) {
-                        ViewManager.getInstance().changeViewTo(ViewManager.View.MAIN);
+                    int responseCode;
 
-                        builder.clear();
-                        builder
-                                .setData(new JSONObject().put("operation", SocketOperationIdentifiers.REQUEST_SERVER_CHANNEL_LIST))
-                                .setWaitForResponse(false);
-                        trafficManager.queueOperation(builder.build());
-                    } else {
-                        try {
-                            ViewManager.displayError(response.getString("message"), "Login failed");
-                        } catch (JSONException e) {
-                            ViewManager.displayError("Could not login.", "Login failed");
-                        }
-
-                        try {
-                            disconnect();
-                        } catch (IOException e) {
-                            ViewManager.displayError(
-                                    "Could not disconnect properly.", "Disconnect failed.");
-                        }
+                    try {responseCode = response.getInt("response_code");}
+                    catch (JSONException e) {
+                        ViewManager.displayError("Authorization response yielded no response code.", "Authorization error.");
+                        clearCommunication();
+                        return;
                     }
-                }).setOnErrorEncountered(ViewManager::displayError)
-                .build());
+
+                    if (responseCode == 204) {
+                        setCurrentState(State.ESTABLISHED);
+                    } else {
+                        String message;
+
+                        try {message = response.getString("message");}
+                        catch (JSONException ignored) {
+                            message = "No explanation provided.";
+                        }
+
+                        ViewManager.displayError("Authorization attempt rejected by server: " + message);
+                        clearCommunication();
+                    }
+                })
+                .setOnErrorEncountered(error -> {
+                    ViewManager.displayError(error, "Authorization failed");
+                    clearCommunication();
+                });
+
+        trafficManager.queueOperation(builder.build());
     }
 
-    private IncomingDataTrafficHandler createHandlerChain() {
+    public void disconnect() {
+        if (currentState != State.ESTABLISHED) return;
+
+        setCurrentState(State.DISCONNECTING);
+
+        // TODO: application closes before sending disconnect communicate
+        JSONObject content = new JSONObject()
+                .put("operation", SocketOperationIdentifiers.CLIENT_DISCONNECT);
+
+        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
+        builder.setData(content);
+
+        SocketOperationQueueingService.getInstance().queueOperation(builder.build());
+
+        clearCommunication();
+    }
+
+    private void clearTrafficManager() {
+        trafficManager = null;
+        trafficManagerStatePublisher.notifySubscribersOnDestroy();
+    }
+
+    private void clearCommunication() {
+        socket = null;
+        clearTrafficManager();
+        setCurrentState(State.WAITING);
+    }
+
+    private IJSONDataHandler createHandlerChain() {
         MainViewController mainViewController = (MainViewController) ViewManager.getInstance().getController(ViewManager.View.MAIN);
 
-        IncomingDataTrafficHandler chain = new IncomingMessageHandler(new MessageOutput(mainViewController));
+        IJSONDataHandler chain = new IncomingMessageHandler(new MessageOutput(mainViewController));
         chain   .setNext(new IncomingLogHandler())
                 .setNext(new IncomingServerChannelListHandler(mainViewController))
                 .setNext(new SSLFinishHandler());
@@ -128,11 +192,18 @@ public class ConnectionSocketManager {
         return chain;
     }
 
-    public boolean isDisconnected() {
-        return trafficManager == null || trafficManager.getSocketConnection().isClosed();
+    private void setCurrentState(State state) {
+        this.currentState = state;
+
+        if (state == State.ESTABLISHED)
+            clientAuthorizedPublisher.notifySubscribers();
     }
 
-    public boolean isLoggedIn() {
-        return loggedIn;
+    public IGenericPublisher<ClientAuthorizedSubscriber> getClientAuthorizedEventPublisher() {
+        return clientAuthorizedPublisher;
+    }
+
+    public IGenericPublisher<TrafficManagerStateSubscriber> getTrafficManagerStatePublisher() {
+        return trafficManagerStatePublisher;
     }
 }
