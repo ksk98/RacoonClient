@@ -4,6 +4,7 @@ import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
 import com.bots.RaccoonClient.Communication.SocketOperationQueueingService;
 import com.bots.RaccoonClient.Config;
 import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedSubscriber;
+import com.bots.RaccoonClient.Loggers.WindowLogger;
 import com.bots.RaccoonClient.Views.BaseViewController;
 import com.bots.RaccoonShared.Discord.BotMessage;
 import com.bots.RaccoonShared.Discord.Channel;
@@ -50,8 +51,12 @@ public class MainViewController extends BaseViewController implements ServerChan
 
         channelPicker.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                serverChannelsMap.get(getSelectedServerId()).setLastSelectedChannelIndex(channelPicker.getSelectedIndex());
-                view.getMessagesContentPane().setDocument(getDocumentForCurrent());
+                try {
+                    serverChannelsMap.get(getSelectedServerId()).setLastSelectedChannelIndex(channelPicker.getSelectedIndex());
+                    view.getMessagesContentPane().setDocument(getDocumentForCurrent());
+                } catch (NullPointerException ignored) {
+                    WindowLogger.getInstance().logError(getClass().getName(), "Could not change document, server or channel might have been removed.");
+                }
             }
         });
 
@@ -84,7 +89,8 @@ public class MainViewController extends BaseViewController implements ServerChan
 
     @Override
     public void consumeServerChannelList(List<ServerChannels> content) {
-        serverPicker.removeAll();
+        serverPicker.removeAllItems();
+        channelPicker.removeAllItems();
         content.forEach(sc -> {
             serverChannelsMap.put(sc.serverId, sc);
             serverPicker.addItem(sc);
