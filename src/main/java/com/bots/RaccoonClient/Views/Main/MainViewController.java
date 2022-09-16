@@ -104,7 +104,7 @@ public class MainViewController extends BaseViewController implements ServerChan
     private void sendMessage() {
         String message = view.getSendMessageContentPane().getText();
         if (Objects.requireNonNullElse(getSelectedServerId(), "").equals("") ||
-                Objects.requireNonNullElse(getSelectedChannelId(), "").equals("") || message.equals(""))
+                Objects.requireNonNullElse(getSelectedChannelId(), "").equals("") || message.strip().equals(""))
             return;
 
         SocketOperationQueueingService.getInstance().queueOperation(

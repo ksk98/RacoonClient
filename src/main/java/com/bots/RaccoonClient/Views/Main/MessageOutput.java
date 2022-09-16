@@ -52,7 +52,7 @@ public class MessageOutput {
             append(Config.logTimestampFormat.format(ZonedDateTime.now().withZoneSameInstant(Config.zoneId)), messageAttribute);
 
             if (message.userIsBot()) {
-                append("[BOT]", botAttribute);
+                append(" [BOT]", botAttribute);
                 append(" ", messageAttribute);
             }
             append(message.username() + ": ", userAttribute);
