@@ -158,6 +158,11 @@ public class ConnectionSocketManager {
     }
 
     private void clearCommunication() {
+        try { if (socket != null) socket.close(); }
+        catch (IOException e) {
+            WindowLogger.getInstance().logError(getClass().getSimpleName(), "Could not properly close socket.");
+        }
+
         socket = null;
         clearTrafficManager();
         setCurrentState(State.WAITING);
