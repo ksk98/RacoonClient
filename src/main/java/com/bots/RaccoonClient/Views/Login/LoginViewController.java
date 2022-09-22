@@ -3,6 +3,7 @@ package com.bots.RaccoonClient.Views.Login;
 import com.bots.RaccoonClient.CacheFilesManager;
 import com.bots.RaccoonClient.Communication.ConnectionSocketManager;
 import com.bots.RaccoonClient.Config;
+import com.bots.RaccoonClient.Events.ClientAuthorizedEvent.ClientAuthorizedSubscriber;
 import com.bots.RaccoonClient.Exceptions.CommunicationEstablishException;
 import com.bots.RaccoonClient.Views.BaseViewController;
 import org.json.JSONObject;
@@ -11,12 +12,13 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class LoginViewController extends BaseViewController {
+public class LoginViewController extends BaseViewController implements ClientAuthorizedSubscriber {
     private final LoginView view;
 
     public LoginViewController() {
         super(new LoginView(Config.windowTitle));
         this.view = (LoginView) super.getView();
+        ConnectionSocketManager.getInstance().getClientAuthorizedEventPublisher().subscribe(this);
         addListeners();
         readLoginCache();
     }
@@ -98,5 +100,11 @@ public class LoginViewController extends BaseViewController {
 
     private String getPassword() {
         return String.valueOf(view.getPasswordField().getPassword());
+    }
+
+    @Override
+    public void onClientAuthorization() {
+        if (view.getRememberMeCheckBox().isSelected())
+            writeLoginCache();
     }
 }
