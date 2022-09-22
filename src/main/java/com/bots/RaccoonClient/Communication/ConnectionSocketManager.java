@@ -149,16 +149,6 @@ public class ConnectionSocketManager {
         if (currentState != State.ESTABLISHED) return;
 
         setCurrentState(State.DISCONNECTING);
-
-        // TODO: application closes before sending disconnect communicate
-        JSONObject content = new JSONObject()
-                .put("operation", SocketOperationIdentifiers.CLIENT_DISCONNECT);
-
-        SocketCommunicationOperationBuilder builder = new SocketCommunicationOperationBuilder();
-        builder.setData(content);
-
-        SocketOperationQueueingService.getInstance().queueOperation(builder.build());
-
         clearCommunication();
     }
 
