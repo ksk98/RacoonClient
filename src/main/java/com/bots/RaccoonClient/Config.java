@@ -13,4 +13,5 @@ public abstract class Config {
     public static final DateTimeFormatter logTimestampFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
     public static final ZoneId zoneId = ZoneId.of("Europe/Warsaw");
     public static final String cacheRootPath = System.getProperty("user.home") + "/RaccoonClientCache";
+    public static final String appIconPath = "/Icon.png";
 }

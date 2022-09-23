@@ -1,5 +1,6 @@
 package com.bots.RaccoonClient.Views.Login;
 
+import com.bots.RaccoonClient.Config;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 
@@ -22,6 +23,7 @@ public class LoginView extends JFrame {
         setContentPane(contentPanel);
         setMinimumSize(new Dimension(200, 100));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(Config.appIconPath)));
         pack();
     }
 

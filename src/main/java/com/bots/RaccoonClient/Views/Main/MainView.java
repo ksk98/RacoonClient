@@ -1,5 +1,6 @@
 package com.bots.RaccoonClient.Views.Main;
 
+import com.bots.RaccoonClient.Config;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.bots.RaccoonShared.Discord.Channel;
@@ -28,6 +29,7 @@ public class MainView extends JFrame {
         setContentPane(contentPanel);
         setMinimumSize(new Dimension(850, 550));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(Config.appIconPath)));
         pack();
     }
 
