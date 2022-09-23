@@ -31,6 +31,7 @@ public class MainView extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(Config.appIconPath)));
         pack();
+        setLocationRelativeTo(null);
     }
 
     public JComboBox<ServerChannels> getMessagesTabServerPickBox() {

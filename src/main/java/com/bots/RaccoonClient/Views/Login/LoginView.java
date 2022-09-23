@@ -25,6 +25,7 @@ public class LoginView extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(Config.appIconPath)));
         pack();
+        setLocationRelativeTo(null);
     }
 
     public JTextField getURLField() {
