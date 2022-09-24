@@ -1,6 +1,4 @@
 # RaccoonTheThird
-**This project is work in progress, everything is subject to change!**
-
 Raccoon The Third is a scalable Discord bot platform that I'm developing for personal use.
 
 This project consists of 3 repositories:
