@@ -11,5 +11,7 @@ Raccoon The Third is a scalable Discord bot application that I have developed fo
 - Reading and sending messages from bot's perspective
 - Server logs monitoring
 
-## Jar
+## Usage
 To build a jar, run `createJar.bat` or manually run `gradlew jar` in the root project directory.
+
+To make connection with the server, obtain its certificate file and place it in the same directory as the jar file. Certificate should be called `Raccoon.cert`.
