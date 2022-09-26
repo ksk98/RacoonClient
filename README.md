@@ -10,3 +10,6 @@ Raccoon The Third is a scalable Discord bot application that I have developed fo
 - Cachable connection credentials
 - Reading and sending messages from bot's perspective
 - Server logs monitoring
+
+## Jar
+To build jar, run `createJar.bat` or manually run `gradlew jar` in the root project directory.
