@@ -25,6 +25,7 @@ public class MessageOutput {
 //        StyleConstants.setAlignment(messageAttribute, StyleConstants.ALIGN_RIGHT);
         botAttribute = new SimpleAttributeSet();
         StyleConstants.setForeground(botAttribute, Color.WHITE);
+        StyleConstants.setBold(botAttribute, true);
         StyleConstants.setBackground(botAttribute, new Color(88,101,242,255));
     }
 
@@ -35,25 +36,27 @@ public class MessageOutput {
         MutableAttributeSet userAttribute = userAttributes.get(userAttributeKey);
         if (userAttribute == null) {
             userAttribute = new SimpleAttributeSet();
+            Color color;
             if (message.userColor() != null)
-                StyleConstants.setForeground(userAttribute, message.userColor());
+                color = message.userColor();
             else {
                 WindowLogger.getInstance().logInfo(
                         getClass().getName(),
                         "Received user color null in logged message. Defaulting to black..."
                 );
-                StyleConstants.setForeground(userAttribute, Color.BLACK);
+                color = Color.BLACK;
             }
+            StyleConstants.setForeground(userAttribute, getDarkerIfNecessary(color));
             StyleConstants.setBold(userAttribute, true);
             userAttributes.put(userAttributeKey, userAttribute);
         }
 
         try {
             append(Config.logTimestampFormat.format(ZonedDateTime.now().withZoneSameInstant(Config.zoneId)), messageAttribute);
+            append(" ", messageAttribute);
 
             if (message.userIsBot()) {
-                append(" ", messageAttribute);
-                append(" [BOT] ", botAttribute);
+                append(" BOT ", botAttribute);
                 append(" ", messageAttribute);
             }
             append(message.username() + ": ", userAttribute);
@@ -77,5 +80,13 @@ public class MessageOutput {
                 message,
                 attributes
         );
+    }
+
+    private Color getDarkerIfNecessary(Color color) {
+        int bound = 204;
+        if (color.getRed() >= bound && color.getGreen() >= bound && color.getBlue() >= bound)
+            return color.darker();
+
+        return color;
     }
 }
