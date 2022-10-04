@@ -41,7 +41,13 @@ public abstract class SSLUtil {
 
     public static void addCertfileToKeystore(KeyStore keyStore) throws CertificateException, IOException, NoSuchAlgorithmException, KeyStoreException {
         keyStore.load(null, null);
-        FileInputStream fis = new FileInputStream(Config.certfilePath);
+        FileInputStream fis;
+
+        try { fis = new FileInputStream(Config.certfilePath); }
+        catch (FileNotFoundException ignored) {
+            throw new CertificateException("Could not find " + Config.certfilePath);
+        }
+
         BufferedInputStream bis = new BufferedInputStream(fis);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         Certificate cert = null;
@@ -52,5 +58,7 @@ public abstract class SSLUtil {
         }
         keyStore.setCertificateEntry("SGCert", cert);
         keyStore.store(new FileOutputStream(Config.localKeystorePath), Config.localKeystorePassword.toCharArray());
+
+        return;
     }
 }
