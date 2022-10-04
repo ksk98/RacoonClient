@@ -15,3 +15,4 @@ Raccoon The Third is a scalable Discord bot application that I have developed fo
 To build a jar, run `createJar.bat` or manually run `gradlew jar` in the root project directory.
 
 To make connection with the server, obtain its certificate file and place it in the same directory as the jar file. Certificate should be called `Raccoon.cert`.
+If you need to replace the certificate file, make sure to also remove `local_keystore.jks` that the client creates in its directory.
