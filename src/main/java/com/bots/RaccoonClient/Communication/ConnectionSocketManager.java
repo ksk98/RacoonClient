@@ -157,7 +157,7 @@ public class ConnectionSocketManager {
         trafficManagerStatePublisher.notifySubscribersOnDestroy();
     }
 
-    private void clearCommunication() {
+    public void clearCommunication() {
         try { if (socket != null) socket.close(); }
         catch (IOException e) {
             WindowLogger.getInstance().logError(getClass().getSimpleName(), "Could not properly close socket.");
