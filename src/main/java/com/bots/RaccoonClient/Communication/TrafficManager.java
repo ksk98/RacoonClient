@@ -120,7 +120,7 @@ public class TrafficManager extends Thread {
                 continue;
             } catch (IOException e) {
                 WindowLogger.getInstance().logError(
-                        getClass().getName(),
+                        getClass().getSimpleName(),
                         "Could not read data from socket stream. (" + e + ")"
                 );
                 continue;
